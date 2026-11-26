@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>商机嗅探器 · UI 外壳预览</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body { margin: 0; font-family: 'Noto Serif SC', serif; }
+    .serif { font-family: 'Cormorant Garamond', 'Noto Serif SC', serif; }
+  </style>
+</head>
+<body class="bg-[#05060a]">
+  <main data-name="Sniffer-UI-Shell" class="flex flex-col justify-start items-center w-[1440px] h-[900px] bg-[#05060a] p-[24px] gap-[20px]">
+    <div data-name="top-bar" class="flex flex-row justify-center items-center w-[1392px]">
+      <div data-name="search-box" class="flex flex-row justify-start items-center gap-[12px] w-[640px] h-[52px] bg-[rgba(22,28,48,0.55)] rounded-[16px] p-[16px] border-[1px] border-[rgba(130,150,210,0.28)] backdrop-blur-[24px]">
+        <i data-name="search-icon" class="fas fa-search text-[18px] text-[#8FA8D8]"></i>
+        <span data-name="search-placeholder" class="text-[15px] leading-[20px] font-[400] text-[#6B7A99]">搜索商机、诗人、技能关键词…</span>
+      </div>
+    </div>
+    <div data-name="stage" class="flex flex-row justify-start items-stretch flex-1 w-[1392px] gap-[20px]">
+      <div data-name="filter-panel" class="flex flex-col justify-start items-stretch w-[280px] bg-[rgba(18,22,40,0.5)] rounded-[20px] p-[20px] gap-[14px] border-[1px] border-[rgba(130,150,210,0.18)] backdrop-blur-[24px]">
+        <span data-name="filter-title" class="text-[16px] leading-[20px] font-[700] text-[#E6EBF5]">机会类型</span>
+        <div data-name="type-origin" class="flex flex-row justify-start items-center gap-[12px] w-[240px] h-[44px] rounded-[12px] p-[12px] bg-[rgba(110,231,249,0.12)] border-[1px] border-[rgba(110,231,249,0.5)]">
+          <span data-name="dot" class="w-[12px] h-[12px] rounded-[12px] bg-[#6EE7F9]"></span>
+          <span data-name="type-name" class="text-[14px] leading-[18px] font-[600] text-[#D8F4FA]">原点</span>
+          <span data-name="type-count" class="text-[12px] leading-[16px] font-[400] text-[#6EE7F9]">2</span>
+        </div>
+        <div data-name="type-cash" class="flex flex-row justify-start items-center gap-[12px] w-[240px] h-[44px] rounded-[12px] p-[12px]">
+          <span data-name="dot" class="w-[12px] h-[12px] rounded-[12px] bg-[#F5C451]"></span>
+          <span data-name="type-name" class="text-[14px] leading-[18px] font-[400] text-[#AEB8CC]">变现</span>
+          <span data-name="type-count" class="text-[12px] leading-[16px] font-[400] text-[#5A6680]">46</span>
+        </div>
+        <div data-name="type-skill" class="flex flex-row justify-start items-center gap-[12px] w-[240px] h-[44px] rounded-[12px] p-[12px]">
+          <span data-name="dot" class="w-[12px] h-[12px] rounded-[12px] bg-[#7CF59E]"></span>
+          <span data-name="type-name" class="text-[14px] leading-[18px] font-[400] text-[#AEB8CC]">技能</span>
+          <span data-name="type-count" class="text-[12px] leading-[16px] font-[400] text-[#5A6680]">38</span>
+        </div>
+        <div data-name="type-scene" class="flex flex-row justify-start items-center gap-[12px] w-[240px] h-[44px] rounded-[12px] p-[12px]">
+          <span data-name="dot" class="w-[12px] h-[12px] rounded-[12px] bg-[#C77DFF]"></span>
+          <span data-name="type-name" class="text-[14px] leading-[18px] font-[400] text-[#AEB8CC]">场景</span>
+          <span data-name="type-count" class="text-[12px] leading-[16px] font-[400] text-[#5A6680]">31</span>
+        </div>
+        <div data-name="type-tool" class="flex flex-row justify-start items-center gap-[12px] w-[240px] h-[44px] rounded-[12px] p-[12px]">
+          <span data-name="dot" class="w-[12px] h-[12px] rounded-[12px] bg-[#6CA8FF]"></span>
+          <span data-name="type-name" class="text-[14px] leading-[18px] font-[400] text-[#AEB8CC]">工具</span>
+          <span data-name="type-count" class="text-[12px] leading-[16px] font-[400] text-[#5A6680]">27</span>
+        </div>
+      </div>
+      <div data-name="nebula-stage" class="flex flex-1 flex-col justify-center items-center bg-[radial-gradient(circle_at_50%_45%,rgba(70,95,180,0.22)_0%,rgba(8,10,18,0)_55%)] rounded-[20px]">
+        <span data-name="stage-hint" class="text-[15px] leading-[20px] font-[400] text-[#4A5670]">点击星点查看商机详情</span>
+      </div>
+      <div data-name="detail-panel" class="flex flex-col justify-start items-stretch w-[420px] bg-[rgba(20,26,46,0.62)] rounded-[20px] p-[24px] gap-[18px] border-[1px] border-[rgba(150,170,230,0.25)] backdrop-blur-[24px]">
+        <div data-name="detail-header" class="flex flex-row justify-between items-start w-[372px]">
+          <span data-name="detail-title" class="serif text-[20px] leading-[26px] font-[700] text-[#EAF0FB]">AI 绘画接单</span>
+          <span data-name="type-badge" class="flex flex-row justify-center items-center h-[26px] px-[10px] rounded-[13px] bg-[rgba(245,196,81,0.15)] text-[#F5C451] text-[13px] leading-[16px] font-[600]">变现</span>
+        </div>
+        <div data-name="field-earn" class="flex flex-col justify-start items-stretch gap-[4px]">
+          <span data-name="field-label" class="text-[12px] leading-[16px] font-[500] text-[#7E8BAA]">赚多少</span>
+          <span data-name="field-value" class="serif text-[16px] leading-[22px] font-[600] text-[#6EE7F9]">月入 8k–25k</span>
+        </div>
+        <div data-name="field-cost" class="flex flex-col justify-start items-stretch gap-[4px]">
+          <span data-name="field-label" class="text-[12px] leading-[16px] font-[500] text-[#7E8BAA]">成本</span>
+          <span data-name="field-value" class="serif text-[16px] leading-[22px] font-[600] text-[#EAF0FB]">显卡已有，几乎零边际成本</span>
+        </div>
+        <div data-name="field-barrier" class="flex flex-col justify-start items-stretch gap-[4px]">
+          <span data-name="field-label" class="text-[12px] leading-[16px] font-[500] text-[#7E8BAA]">门槛</span>
+          <span data-name="field-value" class="serif text-[16px] leading-[22px] font-[600] text-[#EAF0FB]">会基础提示词 + 1 个出图工具</span>
+        </div>
+        <div data-name="field-firststep" class="flex flex-col justify-start items-stretch gap-[4px]">
+          <span data-name="field-label" class="text-[12px] leading-[16px] font-[500] text-[#7E8BAA]">第一步</span>
+          <span data-name="field-value" class="serif text-[16px] leading-[22px] font-[600] text-[#EAF0FB]">在闲鱼/小红书挂「AI 头像定制 9.9 起」</span>
+        </div>
+        <div data-name="field-risk" class="flex flex-col justify-start items-stretch gap-[4px]">
+          <span data-name="field-label" class="text-[12px] leading-[16px] font-[500] text-[#7E8BAA]">风险</span>
+          <span data-name="field-value" class="serif text-[16px] leading-[22px] font-[600] text-[#F5A07A]">平台限流，需多账号矩阵</span>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

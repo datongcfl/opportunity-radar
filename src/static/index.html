@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商机嗅探器 — 发现机会 · 办事不踩坑</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --gold: #d4a574;
+    --cool: #5b7fa5;
+    --warm: #e8d5c4;
+    --bg: #0f1117;
+    --card: #1a1d28;
+    --border: #2a2d38;
+    --text: #d0d3dc;
+    --text2: #8b8fa5;
+    --danger: #e0556a;
+    --green: #5aab8a;
+  }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  a { color: var(--cool); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px; }
+  .hero { text-align: center; padding: 48px 0 32px; }
+  .hero h1 { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: 2px; }
+  .hero p { margin-top: 8px; color: var(--text2); font-size: 14px; }
+
+  .search-bar {
+    display: flex; gap: 0; border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; background: var(--card); margin-bottom: 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.3);
+  }
+  .search-bar select {
+    appearance: none; border: none; border-right: 1px solid var(--border);
+    padding: 14px 36px 14px 16px; font-size: 15px; color: var(--text);
+    background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8fa5' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
+    cursor: pointer; outline: none; cursor: pointer; flex-shrink: 0;
+  }
+  .search-bar select:focus { background-color: #22252f; }
+  .search-bar input {
+    flex: 1; border: none; padding: 14px 16px; font-size: 15px;
+    color: var(--text); background: var(--card); outline: none;
+    min-width: 0;
+  }
+  .search-bar input::placeholder { color: var(--text2); }
+  .search-bar button {
+    border: none; border-left: 1px solid var(--border); padding: 14px 20px;
+    font-size: 15px; color: #fff; background: var(--cool); cursor: pointer;
+    flex-shrink: 0; transition: background .2s;
+  }
+  .search-bar button:hover { background: #4a6d93; }
+  .search-hint { font-size: 12px; color: var(--text2); margin-top: -24px; margin-bottom: 32px; text-align: center; }
+
+  .portals { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .portal-card {
+    display: block; border-radius: 12px; border: 1px solid var(--border);
+    padding: 24px 20px; text-align: center; transition: all .2s;
+    background: var(--card); color: var(--text);
+  }
+  .portal-card:hover { border-color: var(--cool); transform: translateY(-2px); text-decoration: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  .portal-card .icon { font-size: 36px; margin-bottom: 12px; }
+  .portal-card .label { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .portal-card .desc { font-size: 12px; color: var(--text2); }
+
+  .section-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .exp-mini-card {
+    display: block; border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 10px; background: var(--card);
+    transition: border-color .2s; color: var(--text);
+  }
+  .exp-mini-card:hover { border-color: var(--cool); text-decoration: none; }
+  .exp-mini-card .title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .exp-mini-card .meta { font-size: 12px; color: var(--text2); display: flex; gap: 12px; flex-wrap: wrap; }
+  .exp-mini-card .meta .tag { background: #22252f; padding: 1px 8px; border-radius: 4px; font-size: 11px; }
+
+  .footer { text-align: center; color: var(--text2); font-size: 12px; margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  @media (max-width: 480px) {
+    .hero { padding: 32px 0 20px; }
+    .hero h1 { font-size: 22px; }
+    .portals { grid-template-columns: 1fr; }
+    .search-bar select { max-width: 100px; font-size: 13px; padding: 14px 28px 14px 10px; }
+    .search-bar input { font-size: 13px; }
+    .search-bar button { padding: 14px 14px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>商机嗅探器</h1>
+    <p>先定城市，再找答案。过来人的经验，让你办事少踩坑。</p>
+  </div>
+
+  <form class="search-bar" onsubmit="search(event)">
+    <select id="citySelect">
+      <option value="">📍 选城市</option>
+    </select>
+    <input type="text" id="keyword" placeholder="输入你要办的事，比如「居住证办理」…" autocomplete="off">
+    <button type="submit">搜索</button>
+  </form>
+  <div class="search-hint">↑ 先选你在哪个城市办事，再输入关键词</div>
+
+  <div class="portals">
+    <a class="portal-card" href="/galaxy.html">
+      <div class="icon">🔭</div>
+      <div class="label">商机广场</div>
+      <div class="desc">发现赚钱机会 · 360+ 行业变现图谱</div>
+    </a>
+    <a class="portal-card" href="/experience.html">
+      <div class="icon">📋</div>
+      <div class="label">本地经验</div>
+      <div class="desc">办事不踩坑 · 过来人的真实流程</div>
+    </a>
+  </div>
+
+  <div class="section-title"><span class="dot"></span>最近分享的经验</div>
+  <div id="recentList"><div style="color:var(--text2);font-size:13px;">加载中…</div></div>
+
+  <div class="footer">商机嗅探器 · 本地经验来自真实用户分享，仅供参考，办理前请核实最新政策。</div>
+</div>
+
+<script>
+const CITIES = ['北京','上海','广州','深圳','成都','杭州','武汉','重庆','南京','天津','苏州','西安','长沙','沈阳','青岛','郑州','大连','厦门','宁波','无锡','福州','合肥','昆明','哈尔滨','济南','佛山','温州','石家庄','南宁','长春','泉州','贵阳','南昌','太原','烟台','嘉兴','南通','金华','珠海','惠州','徐州','海口','乌鲁木齐','兰州','呼和浩特','银川','西宁','拉萨','大同','运城','长治','临汾','晋中','吕梁','忻州','朔州','阳泉','晋城'];
+
+(function init() {
+  var sel = document.getElementById('citySelect');
+  CITIES.forEach(function(c) {
+    var o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+  loadRecent();
+})();
+
+async function loadRecent() {
+  var el = document.getElementById('recentList');
+  try {
+    var res = await fetch('/api/experiences');
+    var data = await res.json();
+    var list = (data.experiences || []).slice(0, 3);
+    if (!list.length) {
+      el.innerHTML = '<div style="color:var(--text2);font-size:13px;">还没有人分享经验，来做第一个吧 ✨</div>';
+      return;
+    }
+    el.innerHTML = list.map(function(e) {
+      return '<a class="exp-mini-card" href="/experience.html?id=' + e.id + '">'
+        + '<div class="title">' + esc(e.title) + '</div>'
+        + '<div class="meta">'
+        + '<span>📍 ' + esc(e.city) + '</span>'
+        + '<span>📂 ' + esc(e.category) + '</span>'
+        + '<span>📝 ' + e.steps.length + '个步骤</span>'
+        + (e.tags||[]).slice(0,2).map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')
+        + '</div></a>';
+    }).join('');
+  } catch(err) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:13px;">加载失败，请确认服务已启动</div>';
+  }
+}
+
+function search(e) {
+  e.preventDefault();
+  var city = document.getElementById('citySelect').value;
+  var kw = document.getElementById('keyword').value.trim();
+  if (!city && !kw) { document.getElementById('keyword').focus(); return; }
+  var params = new URLSearchParams();
+  if (city) params.set('city', city);
+  if (kw) params.set('q', kw);
+  location.href = '/experience.html?' + params.toString();
+}
+
+function esc(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+</script>
+</body>
+</html>

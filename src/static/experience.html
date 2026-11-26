@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本地经验 — 商机嗅探器</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --card: #1a1d28; --border: #2a2d38; --text: #d0d3dc;
+    --text2: #8b8fa5; --cool: #5b7fa5; --warm: #e8d5c4; --danger: #e0556a;
+    --green: #5aab8a; --orange: #d4953a;
+  }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  a { color: var(--cool); text-decoration: none; } a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 680px; margin: 0 auto; padding: 16px; }
+
+  /* 顶部导航 */
+  .topbar { display: flex; align-items: center; gap: 12px; padding: 12px 0; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .topbar .back { color: var(--text2); font-size: 14px; cursor: pointer; } .topbar .back:hover { color: var(--text); }
+  .topbar .title { font-size: 16px; font-weight: 600; color: #fff; flex: 1; }
+  .topbar .action-btn { font-size: 13px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--cool); color: var(--cool); background: transparent; cursor: pointer; transition: all .2s; }
+  .topbar .action-btn:hover { background: var(--cool); color: #fff; }
+
+  /* 筛选栏 */
+  .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filters select, .filters input {
+    padding: 10px 12px; font-size: 13px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--card); color: var(--text); outline: none;
+  }
+  .filters select { appearance: none; padding-right: 30px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238b8fa5' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+  .filters input { flex: 1; min-width: 140px; }
+  .filters input::placeholder { color: var(--text2); }
+
+  /* 经验卡片列表 */
+  .exp-card {
+    display: block; border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; margin-bottom: 10px; background: var(--card); color: var(--text);
+    transition: border-color .2s; cursor: pointer;
+  }
+  .exp-card:hover { border-color: var(--cool); text-decoration: none; }
+  .exp-card .card-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+  .exp-card .card-meta { font-size: 12px; color: var(--text2); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .exp-card .card-meta .tag { background: #22252f; padding: 1px 8px; border-radius: 4px; font-size: 11px; }
+  .exp-card .card-summary { font-size: 13px; color: var(--text2); margin-top: 6px; line-height: 1.5; }
+
+  .empty-state { text-align: center; padding: 48px 16px; color: var(--text2); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; margin-bottom: 16px; }
+  .btn-primary {
+    display: inline-block; padding: 10px 24px; border-radius: 8px; border: none;
+    font-size: 14px; cursor: pointer; background: var(--cool); color: #fff;
+    transition: background .2s;
+  }
+  .btn-primary:hover { background: #4a6d93; }
+
+  /* 详情页 */
+  .detail-header { margin-bottom: 20px; }
+  .detail-header h2 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .detail-header .info { font-size: 12px; color: var(--text2); display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+  .detail-header .summary { font-size: 13px; color: var(--text2); }
+
+  /* 步骤列表（WikiHow 风格：坑嵌在步骤里） */
+  .section-label { font-size: 13px; font-weight: 600; color: var(--text2); margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); letter-spacing: 1px; }
+  .step-item { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(42,45,56,.4); }
+  .step-item:last-child { border-bottom: none; }
+  .step-num { width: 26px; height: 26px; flex-shrink: 0; background: var(--card); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--cool); }
+  .step-body { flex: 1; min-width: 0; }
+  .step-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+  .step-title { font-size: 15px; font-weight: 600; color: #fff; }
+  .step-costs { font-size: 11px; color: var(--text2); white-space: nowrap; }
+  .step-desc { font-size: 13px; color: var(--text); line-height: 1.65; }
+
+  /* 坑位和解法：紧凑一行式 */
+  .notes { margin-top: 6px; }
+  .note { font-size: 12px; line-height: 1.55; padding: 3px 0 3px 2px; }
+  .note.pitfall { color: #e87882; }
+  .note.solution { color: var(--green); }
+  .note.update { color: var(--cool); }
+  .note-src { font-size: 11px; opacity: .6; margin-left: 2px; white-space: nowrap; }
+  .note-src::before { content: ' — '; }
+
+  /* 补充区 */
+  .supplement-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .supplement-section h3 { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 12px; letter-spacing: 1px; }
+  .supp-item {
+    padding: 10px 12px; margin-bottom: 8px; border-radius: 8px; background: #1e2028;
+    font-size: 13px; line-height: 1.6;
+  }
+  .supp-item .supp-meta { font-size: 11px; color: var(--text2); margin-bottom: 2px; }
+  .supp-item .supp-badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-right: 6px; font-weight: 600; }
+  .badge-update { background: rgba(91,127,165,.25); color: var(--cool); }
+  .badge-pitfall { background: rgba(224,85,106,.25); color: var(--danger); }
+  .badge-solution { background: rgba(90,171,138,.25); color: var(--green); }
+  .badge-general { background: rgba(212,149,58,.25); color: var(--orange); }
+
+  .add-supplement { margin-top: 16px; padding: 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); }
+  .add-supplement textarea { width: 100%; padding: 10px; font-size: 13px; border: 1px solid var(--border); border-radius: 8px; background: #0f1117; color: var(--text); resize: vertical; min-height: 56px; outline: none; font-family: inherit; }
+  .add-supplement .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+  .add-supplement select, .add-supplement input { padding: 8px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; background: #0f1117; color: var(--text); outline: none; }
+  .add-supplement select { cursor: pointer; }
+  .btn-sm { padding: 8px 16px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+  .btn-submit { background: var(--cool); color: #fff; } .btn-submit:hover { background: #4a6d93; }
+
+  /* 发布表单 */
+  .form-section { margin-bottom: 16px; }
+  .form-section label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
+  .form-section label .req { color: var(--danger); }
+  .form-section input, .form-section select, .form-section textarea {
+    width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--card); color: var(--text); outline: none; font-family: inherit;
+  }
+  .form-section textarea { resize: vertical; min-height: 80px; }
+  .form-section select { appearance: none; cursor: pointer; }
+
+  .step-form-block {
+    border: 1px solid var(--border); border-radius: 10px; padding: 16px;
+    margin-bottom: 12px; background: var(--card); position: relative;
+  }
+  .step-form-block .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .step-form-block .step-header span { font-size: 14px; font-weight: 600; color: var(--cool); }
+  .step-form-block .step-header button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 18px; padding: 0 4px; }
+  .step-form-block .field { margin-bottom: 8px; }
+  .step-form-block .field-row { display: flex; gap: 8px; }
+  .step-form-block .field-row .field { flex: 1; }
+  .step-form-block input, .step-form-block textarea {
+    width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid var(--border);
+    border-radius: 6px; background: #0f1117; color: var(--text); outline: none; font-family: inherit;
+  }
+  .step-form-block textarea { resize: vertical; min-height: 60px; }
+  .step-form-block .pitfall-row { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+  .step-form-block .pitfall-row input { flex: 1; }
+
+  .btn-add-step { display: block; width: 100%; padding: 12px; font-size: 14px; border: 1px dashed var(--border); border-radius: 8px; background: transparent; color: var(--text2); cursor: pointer; margin-bottom: 20px; }
+  .btn-add-step:hover { border-color: var(--cool); color: var(--cool); }
+
+  .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+  @media (max-width: 480px) {
+    .filters { flex-direction: column; }
+    .detail-header h2 { font-size: 17px; }
+    .step-form-block .field-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div style="color:var(--text2);text-align:center;padding:60px 0;">加载中…</div></div>
+
+<script>
+// 分类和城市列表
+var CATS = ['车管业务','户籍业务','社保公积金','医疗健康','教育入学','房产相关','营业执照','税务相关','司法公证','其他办事'];
+var CITIES = ['北京','上海','广州','深圳','成都','杭州','武汉','重庆','南京','天津','苏州','西安','长沙','沈阳','青岛','郑州','大连','厦门','宁波','无锡','福州','合肥','昆明','哈尔滨','济南','佛山','温州','石家庄','南宁','长春','泉州','贵阳','南昌','太原','烟台','嘉兴','南通','金华','珠海','惠州','徐州','海口','乌鲁木齐','兰州','呼和浩特','银川','西宁','拉萨','大同','运城','长治','临汾','晋中','吕梁','忻州','朔州','阳泉','晋城'];
+
+function e(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function qs(s) { return document.querySelector(s); }
+function qsa(s) { return document.querySelectorAll(s); }
+function fmtDate(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  var now = new Date();
+  var diff = now - d;
+  if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
+  if (diff < 604800000) return Math.floor(diff/86400000) + '天前';
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+var params = new URLSearchParams(location.search);
+var viewId = params.get('id');
+var viewAction = params.get('action');
+
+function main() {
+  if (viewId) return renderDetail(viewId);
+  if (viewAction === 'publish') return renderPublish();
+  return renderList();
+}
+main();
+
+// ═══ 列表视图 ═══
+function renderList() {
+  var city = params.get('city') || '';
+  var category = params.get('category') || '';
+  var q = params.get('q') || '';
+
+  var catOpts = CATS.map(function(c){return '<option value="'+c+'"'+(c===category?' selected':'')+'>'+c+'</option>';}).join('');
+  var cityOpts = CITIES.map(function(c){return '<option value="'+c+'"'+(c===city?' selected':'')+'>'+c+'</option>';}).join('');
+
+  var html = ''
+  + '<div class="topbar">'
+  + '<a href="/" class="back">← 首页</a>'
+  + '<span class="title">📋 本地经验</span>'
+  + '<a class="action-btn" href="/experience.html?action=publish">+ 分享经验</a>'
+  + '</div>'
+  + '<div class="filters">'
+  + '<select id="fltCity" onchange="flt()"><option value="">📍 全部城市</option>'+cityOpts+'</select>'
+  + '<select id="fltCat" onchange="flt()"><option value="">📂 全部分类</option>'+catOpts+'</select>'
+  + '<input id="fltQ" type="text" placeholder="🔍 搜索关键词…" value="'+e(q)+'" onkeydown="if(event.key===\'Enter\')flt()">'
+  + '</div>'
+  + '<div id="listContent"><div style="color:var(--text2);text-align:center;padding:40px 0;">加载中…</div></div>';
+  document.getElementById('app').innerHTML = html;
+  loadList(city, category, q);
+}
+
+function flt() {
+  var c = document.getElementById('fltCity').value;
+  var cat = document.getElementById('fltCat').value;
+  var q = document.getElementById('fltQ').value.trim();
+  var p = new URLSearchParams();
+  if (c) p.set('city', c);
+  if (cat) p.set('category', cat);
+  if (q) p.set('q', q);
+  history.replaceState(null, '', '/experience.html?' + p.toString());
+  loadList(c, cat, q);
+}
+
+async function loadList(city, category, q) {
+  var el = document.getElementById('listContent');
+  try {
+    var p = new URLSearchParams();
+    if (city) p.set('city', city);
+    if (category) p.set('category', category);
+    if (q) p.set('q', q);
+    var res = await fetch('/api/experiences?' + p.toString());
+    var data = await res.json();
+    var list = data.experiences || [];
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>还没有找到相关经验</p><a class="btn-primary" href="?action=publish">分享第一条经验</a></div>';
+      return;
+    }
+    el.innerHTML = list.map(function(ex) {
+      return '<a class="exp-card" href="?id=' + ex.id + '">'
+        + '<div class="card-title">' + e(ex.title) + '</div>'
+        + '<div class="card-meta">'
+        + '<span>📍 ' + e(ex.city) + '</span>'
+        + '<span>📂 ' + e(ex.category) + '</span>'
+        + '<span>📝 ' + ex.steps.length + '个步骤</span>'
+        + '<span>🕐 ' + fmtDate(ex.updatedAt) + '</span>'
+        + (ex.supplements.length ? '<span>💬 ' + ex.supplements.length + '条补充</span>' : '')
+        + (ex.tags||[]).slice(0,2).map(function(t){return '<span class="tag">'+e(t)+'</span>';}).join('')
+        + '</div>'
+        + '<div class="card-summary">⏱ ' + e(ex.totalDuration) + ' · 💰 ' + e(ex.totalCost) + '</div>'
+        + '</a>';
+    }).join('');
+  } catch(err) {
+    el.innerHTML = '<div class="empty-state"><p>加载失败，请确认服务已启动</p></div>';
+  }
+}
+
+// ═══ 详情视图 ═══
+async function renderDetail(id) {
+  var el = document.getElementById('app');
+  el.innerHTML = '<div style="color:var(--text2);text-align:center;padding:60px 0;">加载中…</div>';
+  try {
+    var res = await fetch('/api/experiences/' + id);
+    if (!res.ok) { el.innerHTML = '<div class="empty-state"><p>经验不存在</p><a href="/experience.html">← 返回列表</a></div>'; return; }
+    var ex = await res.json();
+    el.innerHTML = buildDetailHTML(ex);
+  } catch(err) {
+    el.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+  }
+}
+
+function buildDetailHTML(ex) {
+  // 步骤列表（坑嵌在对应步骤下方，紧跟行动点）
+  var stepsHTML = ex.steps.map(function(s, i) {
+    var notes = (s.pitfalls||[]).map(function(p) {
+      return '<div class="note pitfall">⚠️ ' + e(p.text) + '<span class="note-src">' + e(p.author) + '</span></div>';
+    }).join('')
+    + (s.solutions||[]).map(function(sol) {
+      return '<div class="note solution">🔧 ' + e(sol.text) + '<span class="note-src">' + e(sol.author) + '</span></div>';
+    }).join('');
+    return '<div class="step-item">'
+      + '<div class="step-num">' + (i+1) + '</div>'
+      + '<div class="step-body">'
+      + '<div class="step-head"><span class="step-title">' + e(s.title) + '</span><span class="step-costs">⏱ ' + e(s.duration) + ' · 💰 ' + e(s.cost) + '</span></div>'
+      + '<div class="step-desc">' + e(s.content) + '</div>'
+      + (notes ? '<div class="notes">' + notes + '</div>' : '')
+      + '</div></div>';
+  }).join('');
+
+  // 补充列表
+  var supps = ex.supplements || [];
+  var suppsHTML = supps.length ? supps.map(function(s) {
+    var badge = {update:'📝 信息更新', pitfall:'⚠️ 新增坑位', solution:'🔧 新增解法', general:'💬 补充'}[s.type] || s.type;
+    var badgeClass = 'badge-' + s.type;
+    var stepTag = '';
+    if (s.stepIndex != null && ex.steps[s.stepIndex]) {
+      stepTag = ' → 步骤' + (s.stepIndex+1) + ' · ' + e(ex.steps[s.stepIndex].title);
+    }
+    return '<div class="supp-item">'
+      + '<div class="supp-meta"><span class="supp-badge ' + badgeClass + '">' + badge + '</span>' + stepTag + ' · ' + e(s.author) + ' · ' + fmtDate(s.createdAt) + '</div>'
+      + e(s.content) + '</div>';
+  }).join('') : '<div style="font-size:13px;color:var(--text2);padding:8px 0 0;">暂无补充，来做第一个 ✨</div>';
+
+  return ''
+  + '<div class="topbar">'
+  + '<a href="/experience.html" class="back">← 返回列表</a>'
+  + '<span class="title">经验详情</span>'
+  + '<span class="action-btn" onclick="scrollToSupp()">+ 补充</span>'
+  + '</div>'
+  + '<div class="detail-header">'
+  + '<h2>' + e(ex.title) + '</h2>'
+  + '<div class="info">'
+  + '<span>📍 ' + e(ex.city) + '</span><span>📂 ' + e(ex.category) + '</span>'
+  + '<span>✍️ ' + e(ex.author) + '</span><span>🕐 ' + fmtDate(ex.updatedAt) + '更新</span>'
+  + '</div>'
+  + '<div class="summary">⏱ 总耗时：' + e(ex.totalDuration) + ' · 💰 总费用：' + e(ex.totalCost)
+  + ' · ' + ex.steps.length + '个步骤 · ' + supps.length + '条补充'
+  + ((ex.tags||[]).length ? ' · ' + ex.tags.map(function(t){return '#'+e(t);}).join(' ') : '')
+  + '</div>'
+  + '</div>'
+  + '<div class="section-label">📋 办事步骤</div>'
+  + '<div class="steps-list">' + stepsHTML + '</div>'
+  + '<div class="supplement-section" id="suppArea">'
+  + '<div class="section-label">📝 补充你的经验</div>'
+  + '<div class="add-supplement" id="suppForm">'
+  + '<textarea id="suppContent" placeholder="写下你遇到的新坑位、新变化或更好的解决方法…比如：考试费涨到80元了 / 现场学习改到新地址了 / 不用打电话，公众号上预约更快"></textarea>'
+  + '<div class="row">'
+  + '<select id="suppType"><option value="pitfall">⚠️ 新坑位</option><option value="solution">🔧 新解法</option><option value="update">📝 信息更新</option><option value="general">💬 其他补充</option></select>'
+  + '<select id="suppStep"><option value="-1">（整体，不限步骤）</option>' + ex.steps.map(function(s,i){return '<option value="'+i+'">步骤'+(i+1)+' · '+e(s.title)+'</option>';}).join('') + '</select>'
+  + '<input id="suppAuthor" placeholder="你的昵称" value="匿名" style="width:100px;">'
+  + '<button class="btn-sm btn-submit" onclick="doSupp(\''+ex.id+'\')">提交补充</button>'
+  + '</div>'
+  + '<div id="suppMsg" style="font-size:12px;margin-top:8px;"></div>'
+  + '</div>'
+  + '<div style="margin-top:20px;"><div class="section-label">💬 他人补充（' + supps.length + '条）</div>'
+  + suppsHTML + '</div>'
+  + '</div>';
+}
+
+function scrollToSupp() { var el = document.getElementById('suppArea'); if (el) el.scrollIntoView({behavior:'smooth'}); }
+
+async function doSupp(id) {
+  var content = document.getElementById('suppContent').value.trim();
+  var type = document.getElementById('suppType').value;
+  var stepIdx = parseInt(document.getElementById('suppStep').value);
+  var author = (document.getElementById('suppAuthor').value.trim() || '匿名');
+  var msgEl = document.getElementById('suppMsg');
+  if (!content) { msgEl.innerHTML = '<span style="color:var(--danger)">请输入补充内容</span>'; return; }
+  msgEl.innerHTML = '<span style="color:var(--text2)">提交中…</span>';
+  try {
+    var body = { content: content, type: type, author: author };
+    if (stepIdx >= 0) body.stepIndex = stepIdx;
+    var res = await fetch('/api/experiences/' + id + '/supplement', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (!res.ok) { var err = await res.json(); msgEl.innerHTML = '<span style="color:var(--danger)">' + e(err.error||'提交失败') + '</span>'; return; }
+    var updated = await res.json();
+    // 重新渲染详情页，保持补充表单区域展开
+    document.getElementById('app').innerHTML = buildDetailHTML(updated);
+    msgEl = document.getElementById('suppMsg');
+    if (msgEl) msgEl.innerHTML = '<span style="color:var(--green)">✅ 补充成功！感谢你的贡献</span>';
+    // 滚动到补充区
+    var area = document.getElementById('suppArea');
+    if (area) area.scrollIntoView({behavior:'smooth'});
+  } catch(err) {
+    msgEl.innerHTML = '<span style="color:var(--danger)">网络错误，请重试</span>';
+  }
+}
+
+// ═══ 发布表单 ═══
+function renderPublish() {
+  var catOpts = CATS.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
+  var cityOpts = CITIES.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
+
+  var html = ''
+  + '<div class="topbar">'
+  + '<a href="/experience.html" class="back">← 返回</a>'
+  + '<span class="title">✍️ 分享经验</span>'
+  + '</div>'
+  + '<div style="font-size:13px;color:var(--text2);margin-bottom:20px;">把你的办事流程分享出来，后来的人少走弯路。每一步都可以标注踩过的坑和解决办法。</div>'
+  + '<div class="form-section"><label><span class="req">*</span> 标题</label><input id="pubTitle" placeholder="比如：居住证办理全流程（杭州）"></div>'
+  + '<div class="form-section" style="display:flex;gap:8px;"><div style="flex:1"><label><span class="req">*</span> 城市</label><select id="pubCity"><option value="">请选择</option>'+cityOpts+'</select></div><div style="flex:1"><label><span class="req">*</span> 分类</label><select id="pubCat"><option value="">请选择</option>'+catOpts+'</select></div></div>'
+  + '<div class="form-section"><label>你的昵称</label><input id="pubAuthor" placeholder="留空则显示"匿名""></div>'
+  + '<div id="pubSteps"><div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:12px;">步骤列表</div></div>'
+  + '<button class="btn-add-step" onclick="addStep()">+ 添加步骤</button>'
+  + '<div class="form-section" style="display:flex;gap:8px;"><div style="flex:1"><label>总耗时</label><input id="pubDur" placeholder="比如：约15-20天"></div><div style="flex:1"><label>总费用</label><input id="pubCost" placeholder="比如：约100元"></div></div>'
+  + '<div class="form-section"><label>标签（用逗号分隔）</label><input id="pubTags" placeholder="比如：居住证,材料清单,预约"></div>'
+  + '<div id="pubMsg" style="font-size:12px;color:var(--danger);margin-bottom:12px;"></div>'
+  + '<div class="form-actions">'
+  + '<button class="btn-primary" style="flex:1" onclick="doPublish()">发布经验</button>'
+  + '</div>';
+  document.getElementById('app').innerHTML = html;
+  addStep(); // 预填第一步
+}
+
+var stepCount = 0;
+function addStep() {
+  stepCount++;
+  var container = document.getElementById('pubSteps');
+  var block = document.createElement('div');
+  block.className = 'step-form-block';
+  block.id = 'stepBlock' + stepCount;
+  block.innerHTML = ''
+  + '<div class="step-header"><span>Step ' + stepCount + '</span><button onclick="removeStep(\'stepBlock'+stepCount+'\')">×</button></div>'
+  + '<div class="field"><input placeholder="步骤标题，如：网络学习（7天）" id="stTitle'+stepCount+'"></div>'
+  + '<div class="field"><textarea placeholder="步骤详细描述…" id="stContent'+stepCount+'"></textarea></div>'
+  + '<div class="field-row">'
+  + '<div class="field"><input placeholder="耗时（如：7天）" id="stDur'+stepCount+'"></div>'
+  + '<div class="field"><input placeholder="费用（如：免费）" id="stCost'+stepCount+'"></div>'
+  + '</div>'
+  + '<div class="field"><div style="font-size:12px;color:var(--text2);margin-bottom:4px;">⚠️ 踩过的坑（一条一个，可为空）</div>'
+  + '<div id="stPits'+stepCount+'"></div>'
+  + '<button style="background:none;border:none;color:var(--cool);font-size:12px;cursor:pointer;padding:4px 0;" onclick="addPitfall(\'stPits'+stepCount+'\')">+ 添加坑位</button></div>'
+  + '<div class="field"><div style="font-size:12px;color:var(--text2);margin-bottom:4px;">🔧 解决办法（一条一个，可为空）</div>'
+  + '<div id="stSols'+stepCount+'"></div>'
+  + '<button style="background:none;border:none;color:var(--green);font-size:12px;cursor:pointer;padding:4px 0;" onclick="addSolution(\'stSols'+stepCount+'\')">+ 添加解法</button></div>';
+  container.appendChild(block);
+}
+
+function removeStep(id) {
+  var el = document.getElementById(id);
+  if (el) el.remove();
+  // 至少保留一步
+  if (!document.querySelector('.step-form-block')) addStep();
+}
+
+function addPitfall(containerId) {
+  var div = document.getElementById(containerId);
+  var row = document.createElement('div');
+  row.className = 'pitfall-row';
+  row.innerHTML = '<input placeholder="坑位描述…"><button style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;" onclick="this.parentElement.remove()">×</button>';
+  div.appendChild(row);
+}
+
+function addSolution(containerId) {
+  var div = document.getElementById(containerId);
+  var row = document.createElement('div');
+  row.className = 'pitfall-row';
+  row.innerHTML = '<input placeholder="解决办法…"><button style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;" onclick="this.parentElement.remove()">×</button>';
+  div.appendChild(row);
+}
+
+async function doPublish() {
+  var title = document.getElementById('pubTitle').value.trim();
+  var city = document.getElementById('pubCity').value;
+  var category = document.getElementById('pubCat').value;
+  var author = document.getElementById('pubAuthor').value.trim() || '匿名';
+  var totalDuration = document.getElementById('pubDur').value.trim();
+  var totalCost = document.getElementById('pubCost').value.trim();
+  var tagsStr = document.getElementById('pubTags').value.trim();
+  var msgEl = document.getElementById('pubMsg');
+  if (!title || !city || !category) { msgEl.textContent = '标题、城市、分类为必填项'; return; }
+
+  // 收集步骤
+  var stepBlocks = document.querySelectorAll('.step-form-block');
+  var steps = [];
+  for (var i = 0; i < stepBlocks.length; i++) {
+    var prefix = stepBlocks[i].id.replace('stepBlock','');
+    var stTitle = qs('#stTitle'+prefix); var stContent = qs('#stContent'+prefix);
+    var stDur = qs('#stDur'+prefix); var stCost = qs('#stCost'+prefix);
+    var t = stTitle ? stTitle.value.trim() : '';
+    var c = stContent ? stContent.value.trim() : '';
+    if (!t) { msgEl.textContent = 'Step '+(i+1)+' 标题不能为空'; return; }
+    var pitfalls = [], solutions = [];
+    var pitInputs = qsa('#stPits'+prefix+' input');
+    pitInputs.forEach(function(inp) { var v=inp.value.trim(); if(v) pitfalls.push(v); });
+    var solInputs = qsa('#stSols'+prefix+' input');
+    solInputs.forEach(function(inp) { var v=inp.value.trim(); if(v) solutions.push(v); });
+    steps.push({
+      title: t, content: c, duration: stDur ? stDur.value.trim() : '', cost: stCost ? stCost.value.trim() : '',
+      pitfalls: pitfalls, solutions: solutions
+    });
+  }
+  if (steps.length === 0) { msgEl.textContent = '至少添加一个步骤'; return; }
+
+  var tags = tagsStr ? tagsStr.split(/[,，]/).map(function(t){return t.trim();}).filter(Boolean) : [];
+
+  msgEl.style.color = 'var(--text2)'; msgEl.textContent = '发布中…';
+  try {
+    var res = await fetch('/api/experiences', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ title:title, city:city, category:category, author:author, steps:steps, totalDuration:totalDuration, totalCost:totalCost, tags:tags })
+    });
+    if (!res.ok) { var err = await res.json(); msgEl.style.color = 'var(--danger)'; msgEl.textContent = err.error || '发布失败'; return; }
+    var created = await res.json();
+    location.href = '/experience.html?id=' + created.id;
+  } catch(err) {
+    msgEl.style.color = 'var(--danger)'; msgEl.textContent = '网络错误，请重试';
+  }
+}
+</script>
+</body>
+</html>
