@@ -4,6 +4,7 @@
   "private": true,
   "description": "商机嗅探器 MVP · AI行业互动裂变图谱（原点—触手—相通点）",
   "scripts": {
-    "dev": "node src/server.js"
+    "dev": "node src/server.js",
+    "test": "node --test test/*.test.js"
   }
 }

@@ -1,0 +1,207 @@
+{
+  "modules": [
+    {
+      "id": "M01",
+      "name": "预约受理与智能派单",
+      "kind": "module",
+      "level": "evidence",
+      "source_count": 4,
+      "evidence_count": 4,
+      "independent_count": 1,
+      "verified_count": 4,
+      "verified_independent_count": 1,
+      "sources": [
+        "EC-001",
+        "EC-002",
+        "EC-003",
+        "EC-005"
+      ],
+      "strongest": "EC-005",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "M02",
+      "name": "陪诊师档案与资质管理",
+      "kind": "module",
+      "level": "strong",
+      "source_count": 4,
+      "evidence_count": 3,
+      "independent_count": 2,
+      "verified_count": 3,
+      "verified_independent_count": 2,
+      "sources": [
+        "EC-004",
+        "EC-005",
+        "EC-007",
+        "EC-009"
+      ],
+      "strongest": "EC-005",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "M03",
+      "name": "就诊纪要与用药提醒",
+      "kind": "module",
+      "level": "evidence",
+      "source_count": 3,
+      "evidence_count": 2,
+      "independent_count": 1,
+      "verified_count": 2,
+      "verified_independent_count": 1,
+      "sources": [
+        "EC-001",
+        "EC-003",
+        "EC-008"
+      ],
+      "strongest": "EC-003",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "M04",
+      "name": "订单计费与费用分摊",
+      "kind": "module",
+      "level": "strong",
+      "source_count": 5,
+      "evidence_count": 5,
+      "independent_count": 2,
+      "verified_count": 5,
+      "verified_independent_count": 2,
+      "sources": [
+        "EC-001",
+        "EC-002",
+        "EC-003",
+        "EC-005",
+        "EC-009"
+      ],
+      "strongest": "EC-005",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "M05",
+      "name": "在场打卡留痕与风控",
+      "kind": "module",
+      "level": "strong",
+      "source_count": 3,
+      "evidence_count": 2,
+      "independent_count": 2,
+      "verified_count": 2,
+      "verified_independent_count": 2,
+      "sources": [
+        "EC-004",
+        "EC-007",
+        "EC-009"
+      ],
+      "strongest": "EC-004",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "M06",
+      "name": "服务评价与复购随访",
+      "kind": "module",
+      "level": "evidence",
+      "source_count": 2,
+      "evidence_count": 1,
+      "independent_count": 1,
+      "verified_count": 1,
+      "verified_independent_count": 1,
+      "sources": [
+        "EC-003",
+        "EC-007"
+      ],
+      "strongest": "EC-003",
+      "reusable": false,
+      "single_source": true
+    }
+  ],
+  "subsystems": [
+    {
+      "id": "S01",
+      "name": "三甲门诊陪诊与代办",
+      "kind": "subsystem",
+      "level": "evidence",
+      "source_count": 1,
+      "evidence_count": 1,
+      "independent_count": 1,
+      "verified_count": 1,
+      "verified_independent_count": 1,
+      "sources": [
+        "EC-002"
+      ],
+      "strongest": "EC-002",
+      "reusable": false,
+      "single_source": true
+    },
+    {
+      "id": "S02",
+      "name": "居家上门日常照护",
+      "kind": "subsystem",
+      "level": "strong",
+      "source_count": 4,
+      "evidence_count": 2,
+      "independent_count": 2,
+      "verified_count": 2,
+      "verified_independent_count": 2,
+      "sources": [
+        "EC-004",
+        "EC-007",
+        "EC-008",
+        "EC-009"
+      ],
+      "strongest": "EC-004",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "S03",
+      "name": "异地家属协同门户",
+      "kind": "subsystem",
+      "level": "evidence",
+      "source_count": 3,
+      "evidence_count": 2,
+      "independent_count": 1,
+      "verified_count": 2,
+      "verified_independent_count": 1,
+      "sources": [
+        "EC-001",
+        "EC-004",
+        "EC-008"
+      ],
+      "strongest": "EC-004",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "S04",
+      "name": "机构运营与调度后台",
+      "kind": "subsystem",
+      "level": "evidence",
+      "source_count": 1,
+      "evidence_count": 1,
+      "independent_count": 1,
+      "verified_count": 1,
+      "verified_independent_count": 1,
+      "sources": [
+        "EC-005"
+      ],
+      "strongest": "EC-005",
+      "reusable": false,
+      "single_source": true
+    }
+  ],
+  "summary": {
+    "none": 0,
+    "mention": 0,
+    "evidence": 6,
+    "strong": 4
+  },
+  "sources": 8,
+  "platforms": {
+    "github": 5,
+    "web": 3
+  }
+}

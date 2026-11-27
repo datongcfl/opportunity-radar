@@ -1,180 +1,123 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="zh-CN" data-theme="stone-dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>商机嗅探器 — 发现机会 · 办事不踩坑</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --gold: #d4a574;
-    --cool: #5b7fa5;
-    --warm: #e8d5c4;
-    --bg: #0f1117;
-    --card: #1a1d28;
-    --border: #2a2d38;
-    --text: #d0d3dc;
-    --text2: #8b8fa5;
-    --danger: #e0556a;
-    --green: #5aab8a;
-  }
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-  a { color: var(--cool); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-
-  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px; }
-  .hero { text-align: center; padding: 48px 0 32px; }
-  .hero h1 { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: 2px; }
-  .hero p { margin-top: 8px; color: var(--text2); font-size: 14px; }
-
-  .search-bar {
-    display: flex; gap: 0; border: 1px solid var(--border); border-radius: 12px;
-    overflow: hidden; background: var(--card); margin-bottom: 32px;
-    box-shadow: 0 4px 24px rgba(0,0,0,.3);
-  }
-  .search-bar select {
-    appearance: none; border: none; border-right: 1px solid var(--border);
-    padding: 14px 36px 14px 16px; font-size: 15px; color: var(--text);
-    background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8fa5' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
-    cursor: pointer; outline: none; cursor: pointer; flex-shrink: 0;
-  }
-  .search-bar select:focus { background-color: #22252f; }
-  .search-bar input {
-    flex: 1; border: none; padding: 14px 16px; font-size: 15px;
-    color: var(--text); background: var(--card); outline: none;
-    min-width: 0;
-  }
-  .search-bar input::placeholder { color: var(--text2); }
-  .search-bar button {
-    border: none; border-left: 1px solid var(--border); padding: 14px 20px;
-    font-size: 15px; color: #fff; background: var(--cool); cursor: pointer;
-    flex-shrink: 0; transition: background .2s;
-  }
-  .search-bar button:hover { background: #4a6d93; }
-  .search-hint { font-size: 12px; color: var(--text2); margin-top: -24px; margin-bottom: 32px; text-align: center; }
-
-  .portals { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
-  .portal-card {
-    display: block; border-radius: 12px; border: 1px solid var(--border);
-    padding: 24px 20px; text-align: center; transition: all .2s;
-    background: var(--card); color: var(--text);
-  }
-  .portal-card:hover { border-color: var(--cool); transform: translateY(-2px); text-decoration: none;
-    box-shadow: 0 8px 24px rgba(0,0,0,.4); }
-  .portal-card .icon { font-size: 36px; margin-bottom: 12px; }
-  .portal-card .label { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-  .portal-card .desc { font-size: 12px; color: var(--text2); }
-
-  .section-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-  .section-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-  .exp-mini-card {
-    display: block; border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 16px; margin-bottom: 10px; background: var(--card);
-    transition: border-color .2s; color: var(--text);
-  }
-  .exp-mini-card:hover { border-color: var(--cool); text-decoration: none; }
-  .exp-mini-card .title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-  .exp-mini-card .meta { font-size: 12px; color: var(--text2); display: flex; gap: 12px; flex-wrap: wrap; }
-  .exp-mini-card .meta .tag { background: #22252f; padding: 1px 8px; border-radius: 4px; font-size: 11px; }
-
-  .footer { text-align: center; color: var(--text2); font-size: 12px; margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); }
-
-  @media (max-width: 480px) {
-    .hero { padding: 32px 0 20px; }
-    .hero h1 { font-size: 22px; }
-    .portals { grid-template-columns: 1fr; }
-    .search-bar select { max-width: 100px; font-size: 13px; padding: 14px 28px 14px 10px; }
-    .search-bar input { font-size: 13px; }
-    .search-bar button { padding: 14px 14px; font-size: 13px; }
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>商机嗅探器 · 无界空间推演台</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/desk/tokens.css">
 </head>
 <body>
-<div class="wrap">
 
-  <div class="hero">
-    <h1>商机嗅探器</h1>
-    <p>先定城市，再找答案。过来人的经验，让你办事少踩坑。</p>
+  <!-- Top Floating Command Capsule + Active Desk Bookmarks -->
+  <header class="top-bar-float">
+    <div class="capsule">
+      <span class="brand-title">商机嗅探器</span>
+      <button class="cmd-btn" id="openPaletteBtn" title="召唤新行业或从归档柜恢复 (Ctrl+K)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path>
+        </svg>
+        <span>请上桌面 / 归档柜（<span id="cabinetBadge">词库 771</span>）</span>
+        <span class="kbd">⌘K</span>
+      </button>
+    </div>
+
+    <nav class="origin-tabs" id="originTabs" aria-label="桌面当前行业书签"></nav>
+
+    <div class="capsule" style="padding:0 6px;">
+      <button class="pill-btn primary" id="exportBriefBtn" title="导出当前分支的行动清单与 radar 待补证据简报">导出行动简报</button>
+    </div>
+  </header>
+
+  <!-- 96% Frameless Infinite Spatial Desk -->
+  <main id="desk">
+    <div id="world" data-lod="detail">
+      <svg id="edgesSvg" viewBox="-6000 -6000 12000 12000"></svg>
+      <div id="edgePills"></div>
+      <div id="cardsLayer"></div>
+    </div>
+  </main>
+
+  <div id="marqueeBox"></div>
+
+  <!-- Bottom-Left Workflow Filter & Hint Bar -->
+  <div class="bottom-left-bar">
+    <button class="filter-chip" id="starFilterBtn">★ 只看重点深挖</button>
+    <span style="opacity:.35">|</span>
+    <span>双击卡片原位精修 · 点 RADAR 徽标查看模块覆盖矩阵 · 底部圆点拖拉跨界桥</span>
   </div>
 
-  <form class="search-bar" onsubmit="search(event)">
-    <select id="citySelect">
-      <option value="">📍 选城市</option>
-    </select>
-    <input type="text" id="keyword" placeholder="输入你要办的事，比如「居住证办理」…" autocomplete="off">
-    <button type="submit">搜索</button>
-  </form>
-  <div class="search-hint">↑ 先选你在哪个城市办事，再输入关键词</div>
-
-  <div class="portals">
-    <a class="portal-card" href="/galaxy.html">
-      <div class="icon">🔭</div>
-      <div class="label">商机广场</div>
-      <div class="desc">发现赚钱机会 · 360+ 行业变现图谱</div>
-    </a>
-    <a class="portal-card" href="/experience.html">
-      <div class="icon">📋</div>
-      <div class="label">本地经验</div>
-      <div class="desc">办事不踩坑 · 过来人的真实流程</div>
-    </a>
+  <!-- Bottom-Right Minimap + Astryx Theme & Layout Dock -->
+  <div class="bottom-right-stack">
+    <canvas id="minimapCanvas" class="minimap" width="148" height="92" title="缩略导航雷达：点击任意位置快速跳转"></canvas>
+    <div class="dock">
+      <button class="dock-btn" id="undoBtn" title="撤销 (Ctrl+Z)">撤回</button>
+      <button class="dock-btn" id="redoBtn" title="重做 (Ctrl+Shift+Z)">重做</button>
+      <button class="dock-btn" id="tidyLayoutBtn" title="树状防碰撞自动理顺排布">理顺排布</button>
+      <select class="dock-select" id="themeSelect" title="Meta Astryx 语义主题切换">
+        <option value="stone-dark">矿石暗夜</option>
+        <option value="stone-light">温润矿纸</option>
+        <option value="matcha">静谧抹茶</option>
+        <option value="neutral-dark">中性蓝调</option>
+      </select>
+      <button class="dock-btn" id="zoomOutBtn">−</button>
+      <button class="dock-btn" id="zoomReadout" title="自适应全局视角">85%</button>
+      <button class="dock-btn" id="zoomInBtn">+</button>
+      <a class="dock-btn" href="/experience.html" title="独立本地办事经验模块">本地经验 ↗</a>
+    </div>
   </div>
 
-  <div class="section-title"><span class="dot"></span>最近分享的经验</div>
-  <div id="recentList"><div style="color:var(--text2);font-size:13px;">加载中…</div></div>
+  <!-- Command Palette Modal (Cabinet + 771 Dictionary) -->
+  <div class="modal-backdrop" id="paletteModal">
+    <div class="modal-box">
+      <input class="palette-input" id="paletteInput" placeholder="搜索 771 行业请上桌，或从归档柜恢复历史推演树…" autocomplete="off">
+      <div class="palette-list" id="paletteList"></div>
+    </div>
+  </div>
 
-  <div class="footer">商机嗅探器 · 本地经验来自真实用户分享，仅供参考，办理前请核实最新政策。</div>
-</div>
+  <!-- Live Radar Coverage Matrix & Source Ledger Modal -->
+  <div class="modal-backdrop" id="radarModal">
+    <div class="radar-modal-box">
+      <div class="radar-head">
+        <div>
+          <div style="font-size:15.5px;font-weight:700;" id="radarModalTitle">radar 行业证据审计矩阵</div>
+          <div style="font-size:11.5px;color:var(--color-text-secondary);" id="radarModalSub">按模块核查真凭实据与缺口</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <select class="form-select" id="radarPackSelect" style="width:auto;margin:0;padding:5px 10px;font-size:12px;"></select>
+          <button class="pill-btn primary" id="radarRunBtn">运行 radar 重算</button>
+          <button class="pill-btn" id="radarCloseBtn">关闭</button>
+        </div>
+      </div>
+      <div class="radar-summary-bar" id="radarSummaryBar">加载中…</div>
+      <div class="radar-tabs">
+        <button class="radar-tab active" data-rtab="matrix">模块×子系统覆盖矩阵</button>
+        <button class="radar-tab" data-rtab="sources">已核验来源账本</button>
+        <button class="radar-tab" data-rtab="gaps">空白与单源缺口 (gaps.md)</button>
+      </div>
+      <div class="radar-body" id="radarBody"></div>
+    </div>
+  </div>
 
-<script>
-const CITIES = ['北京','上海','广州','深圳','成都','杭州','武汉','重庆','南京','天津','苏州','西安','长沙','沈阳','青岛','郑州','大连','厦门','宁波','无锡','福州','合肥','昆明','哈尔滨','济南','佛山','温州','石家庄','南宁','长春','泉州','贵阳','南昌','太原','烟台','嘉兴','南通','金华','珠海','惠州','徐州','海口','乌鲁木齐','兰州','呼和浩特','银川','西宁','拉萨','大同','运城','长治','临汾','晋中','吕梁','忻州','朔州','阳泉','晋城'];
+  <!-- Export Action & Radar Evidence Brief Modal -->
+  <div class="modal-backdrop" id="briefModal">
+    <div class="modal-box" style="padding:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;">商机行动清单与 radar 待核实证据简报</div>
+          <div style="font-size:11.5px;color:var(--color-text-secondary);">可直接粘贴至文档执行，或交由 radar / Agent 定向补齐空白证据</div>
+        </div>
+      </div>
+      <textarea class="form-textarea" id="briefTextarea" rows="13" style="font-family:var(--font-mono);font-size:11.5px;line-height:1.55;"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
+        <button class="pill-btn" id="closeBriefBtn">关闭</button>
+        <button class="pill-btn primary" id="copyBriefBtn">复制 Markdown 简报</button>
+      </div>
+    </div>
+  </div>
 
-(function init() {
-  var sel = document.getElementById('citySelect');
-  CITIES.forEach(function(c) {
-    var o = document.createElement('option');
-    o.value = c; o.textContent = c;
-    sel.appendChild(o);
-  });
-  loadRecent();
-})();
+  <div id="toast" class="toast"></div>
 
-async function loadRecent() {
-  var el = document.getElementById('recentList');
-  try {
-    var res = await fetch('/api/experiences');
-    var data = await res.json();
-    var list = (data.experiences || []).slice(0, 3);
-    if (!list.length) {
-      el.innerHTML = '<div style="color:var(--text2);font-size:13px;">还没有人分享经验，来做第一个吧 ✨</div>';
-      return;
-    }
-    el.innerHTML = list.map(function(e) {
-      return '<a class="exp-mini-card" href="/experience.html?id=' + e.id + '">'
-        + '<div class="title">' + esc(e.title) + '</div>'
-        + '<div class="meta">'
-        + '<span>📍 ' + esc(e.city) + '</span>'
-        + '<span>📂 ' + esc(e.category) + '</span>'
-        + '<span>📝 ' + e.steps.length + '个步骤</span>'
-        + (e.tags||[]).slice(0,2).map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')
-        + '</div></a>';
-    }).join('');
-  } catch(err) {
-    el.innerHTML = '<div style="color:var(--text2);font-size:13px;">加载失败，请确认服务已启动</div>';
-  }
-}
-
-function search(e) {
-  e.preventDefault();
-  var city = document.getElementById('citySelect').value;
-  var kw = document.getElementById('keyword').value.trim();
-  if (!city && !kw) { document.getElementById('keyword').focus(); return; }
-  var params = new URLSearchParams();
-  if (city) params.set('city', city);
-  if (kw) params.set('q', kw);
-  location.href = '/experience.html?' + params.toString();
-}
-
-function esc(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-</script>
+  <script type="module" src="/desk/desk-app.js"></script>
 </body>
 </html>

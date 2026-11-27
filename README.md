@@ -7,8 +7,11 @@
 ## 当前状态
 
 - 版本：见 `VERSION`（0.3.0）
-- 阶段：MVP 原型，首发行业是「AI 行业」
-- 结构：**广场层**（行业列表）+ **行业层**（单个行业的裂变图谱），另有 3D 星系原型页和本地经验图谱页
+- 阶段：MVP 原型，主界面升级为 **无界空间商机推演台（Spatial Opportunity Desk）**，并已打通与 [radar](https://github.com/datongcfl/radar) 的实时证据审计桥接
+- 结构：
+  - **主入口（`/`）**：去边框无限空间卡片画布（`⌘K` 召唤 771 行业词库与归档柜、第一性原理提问式原地裂变、`★ 重点深挖` 与 `✕ 证伪留档`、拖拽建立跨界相通点、4 套 Astryx 语义主题、一键导出 Markdown 行动与待补证据简报）
+  - **`radar` 证据矩阵桥接**：卡片直接关联 `radar` 分析包，按模块/子系统查看 `strong / evidence / mention / none` 覆盖度矩阵、已核验原文来源账本与 `gaps.md` 缺口，支持页面内一键重跑 `radar`
+  - **本地经验（`/experience.html`）**：独立路由与入口的办事流程避坑模块
 
 ## 快速开始
 
@@ -43,7 +46,12 @@ DESIGN.md            # 设计文档（API、数据模型、交互）
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/industries` | 行业列表 |
+| GET | `/api/desk` | 读取空间推演台桌面持久化状态 |
+| PUT | `/api/desk` | 保存空间推演台节点、连线、跨界桥与主题状态 |
+| GET | `/api/radar/packs` | 列出可用的 `radar` 行业证据包与最新覆盖摘要 |
+| GET | `/api/radar/runs/:pack` | 获取指定 `radar` 包的模块覆盖度矩阵、来源账本与缺口 |
+| POST | `/api/radar/run` | 调用同级 `radar` 引擎实时重算指定分析包的证据覆盖度 |
+| GET | `/api/industries` | 行业词库列表（支持 `?all=true` 与 `?q=` 搜索） |
 | POST | `/api/industries` | 发起新行业（必须同时填写第一条变现路径） |
 | GET | `/api/graph?industry=<id>` | 获取某个行业的可见图谱 |
 | POST | `/api/expand` | 展开节点的下一层 |

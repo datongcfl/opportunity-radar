@@ -149,17 +149,27 @@
 
 <script>
 // 分类和城市列表
-var CATS = ['车管业务','户籍业务','社保公积金','医疗健康','教育入学','房产相关','营业执照','税务相关','司法公证','其他办事'];
+var CATS = ['政务办事','车管业务','户籍业务','社保公积金','医疗健康','教育入学','房产相关','营业执照','税务相关','司法公证','其他办事'];
 var CITIES = ['北京','上海','广州','深圳','成都','杭州','武汉','重庆','南京','天津','苏州','西安','长沙','沈阳','青岛','郑州','大连','厦门','宁波','无锡','福州','合肥','昆明','哈尔滨','济南','佛山','温州','石家庄','南宁','长春','泉州','贵阳','南昌','太原','烟台','嘉兴','南通','金华','珠海','惠州','徐州','海口','乌鲁木齐','兰州','呼和浩特','银川','西宁','拉萨','大同','运城','长治','临汾','晋中','吕梁','忻州','朔州','阳泉','晋城'];
 
-function e(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function e(s) { var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
 function qs(s) { return document.querySelector(s); }
 function qsa(s) { return document.querySelectorAll(s); }
+async function readErrMsg(res, fallback) {
+  try {
+    var data = await res.json();
+    return (data && data.error) || fallback;
+  } catch (_) {
+    return fallback + ' (HTTP ' + res.status + ')';
+  }
+}
 function fmtDate(iso) {
   if (!iso) return '';
   var d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
   var now = new Date();
   var diff = now - d;
+  if (diff < 60000) return '刚刚';
   if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
   if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
   if (diff < 604800000) return Math.floor(diff/86400000) + '天前';
@@ -188,8 +198,8 @@ function renderList() {
 
   var html = ''
   + '<div class="topbar">'
-  + '<a href="/" class="back">← 首页</a>'
-  + '<span class="title">📋 本地经验</span>'
+  + '<a href="/" class="back">← 商机嗅探器</a>'
+  + '<span class="title">📋 本地经验（独立模块）</span>'
   + '<a class="action-btn" href="/experience.html?action=publish">+ 分享经验</a>'
   + '</div>'
   + '<div class="filters">'
@@ -229,7 +239,7 @@ async function loadList(city, category, q) {
       return;
     }
     el.innerHTML = list.map(function(ex) {
-      return '<a class="exp-card" href="?id=' + ex.id + '">'
+      return '<a class="exp-card" href="?id=' + encodeURIComponent(ex.id) + '">'
         + '<div class="card-title">' + e(ex.title) + '</div>'
         + '<div class="card-meta">'
         + '<span>📍 ' + e(ex.city) + '</span>'
@@ -252,10 +262,12 @@ async function renderDetail(id) {
   var el = document.getElementById('app');
   el.innerHTML = '<div style="color:var(--text2);text-align:center;padding:60px 0;">加载中…</div>';
   try {
-    var res = await fetch('/api/experiences/' + id);
+    var res = await fetch('/api/experiences/' + encodeURIComponent(id));
     if (!res.ok) { el.innerHTML = '<div class="empty-state"><p>经验不存在</p><a href="/experience.html">← 返回列表</a></div>'; return; }
     var ex = await res.json();
     el.innerHTML = buildDetailHTML(ex);
+    var suppBtn = document.getElementById('suppSubmitBtn');
+    if (suppBtn) suppBtn.addEventListener('click', function() { doSupp(ex.id); });
   } catch(err) {
     el.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
   }
@@ -279,8 +291,8 @@ function buildDetailHTML(ex) {
       + '</div></div>';
   }).join('');
 
-  // 补充列表
-  var supps = ex.supplements || [];
+  // 补充列表（最新在前）
+  var supps = (ex.supplements || []).slice().reverse();
   var suppsHTML = supps.length ? supps.map(function(s) {
     var badge = {update:'📝 信息更新', pitfall:'⚠️ 新增坑位', solution:'🔧 新增解法', general:'💬 补充'}[s.type] || s.type;
     var badgeClass = 'badge-' + s.type;
@@ -320,7 +332,7 @@ function buildDetailHTML(ex) {
   + '<select id="suppType"><option value="pitfall">⚠️ 新坑位</option><option value="solution">🔧 新解法</option><option value="update">📝 信息更新</option><option value="general">💬 其他补充</option></select>'
   + '<select id="suppStep"><option value="-1">（整体，不限步骤）</option>' + ex.steps.map(function(s,i){return '<option value="'+i+'">步骤'+(i+1)+' · '+e(s.title)+'</option>';}).join('') + '</select>'
   + '<input id="suppAuthor" placeholder="你的昵称" value="匿名" style="width:100px;">'
-  + '<button class="btn-sm btn-submit" onclick="doSupp(\''+ex.id+'\')">提交补充</button>'
+  + '<button class="btn-sm btn-submit" id="suppSubmitBtn">提交补充</button>'
   + '</div>'
   + '<div id="suppMsg" style="font-size:12px;margin-top:8px;"></div>'
   + '</div>'
@@ -334,7 +346,7 @@ function scrollToSupp() { var el = document.getElementById('suppArea'); if (el) 
 async function doSupp(id) {
   var content = document.getElementById('suppContent').value.trim();
   var type = document.getElementById('suppType').value;
-  var stepIdx = parseInt(document.getElementById('suppStep').value);
+  var stepIdx = parseInt(document.getElementById('suppStep').value, 10);
   var author = (document.getElementById('suppAuthor').value.trim() || '匿名');
   var msgEl = document.getElementById('suppMsg');
   if (!content) { msgEl.innerHTML = '<span style="color:var(--danger)">请输入补充内容</span>'; return; }
@@ -342,13 +354,15 @@ async function doSupp(id) {
   try {
     var body = { content: content, type: type, author: author };
     if (stepIdx >= 0) body.stepIndex = stepIdx;
-    var res = await fetch('/api/experiences/' + id + '/supplement', {
+    var res = await fetch('/api/experiences/' + encodeURIComponent(id) + '/supplement', {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
     });
-    if (!res.ok) { var err = await res.json(); msgEl.innerHTML = '<span style="color:var(--danger)">' + e(err.error||'提交失败') + '</span>'; return; }
+    if (!res.ok) { var msg = await readErrMsg(res, '提交失败'); msgEl.innerHTML = '<span style="color:var(--danger)">' + e(msg) + '</span>'; return; }
     var updated = await res.json();
     // 重新渲染详情页，保持补充表单区域展开
     document.getElementById('app').innerHTML = buildDetailHTML(updated);
+    var suppBtn = document.getElementById('suppSubmitBtn');
+    if (suppBtn) suppBtn.addEventListener('click', function() { doSupp(updated.id); });
     msgEl = document.getElementById('suppMsg');
     if (msgEl) msgEl.innerHTML = '<span style="color:var(--green)">✅ 补充成功！感谢你的贡献</span>';
     // 滚动到补充区
@@ -407,6 +421,15 @@ function addStep() {
   + '<div id="stSols'+stepCount+'"></div>'
   + '<button style="background:none;border:none;color:var(--green);font-size:12px;cursor:pointer;padding:4px 0;" onclick="addSolution(\'stSols'+stepCount+'\')">+ 添加解法</button></div>';
   container.appendChild(block);
+  resequenceSteps();
+}
+
+function resequenceSteps() {
+  var blocks = document.querySelectorAll('.step-form-block');
+  blocks.forEach(function(b, idx) {
+    var span = b.querySelector('.step-header span');
+    if (span) span.textContent = 'Step ' + (idx + 1);
+  });
 }
 
 function removeStep(id) {
@@ -414,6 +437,7 @@ function removeStep(id) {
   if (el) el.remove();
   // 至少保留一步
   if (!document.querySelector('.step-form-block')) addStep();
+  resequenceSteps();
 }
 
 function addPitfall(containerId) {
@@ -473,9 +497,9 @@ async function doPublish() {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ title:title, city:city, category:category, author:author, steps:steps, totalDuration:totalDuration, totalCost:totalCost, tags:tags })
     });
-    if (!res.ok) { var err = await res.json(); msgEl.style.color = 'var(--danger)'; msgEl.textContent = err.error || '发布失败'; return; }
+    if (!res.ok) { var msg = await readErrMsg(res, '发布失败'); msgEl.style.color = 'var(--danger)'; msgEl.textContent = msg; return; }
     var created = await res.json();
-    location.href = '/experience.html?id=' + created.id;
+    location.href = '/experience.html?id=' + encodeURIComponent(created.id);
   } catch(err) {
     msgEl.style.color = 'var(--danger)'; msgEl.textContent = '网络错误，请重试';
   }
