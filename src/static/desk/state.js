@@ -48,7 +48,7 @@ export const FISSION_PRESETS = [
   },
 ];
 
-const STORAGE_KEY = 'opp_radar_spatial_desk_v6';
+const STORAGE_KEY = 'opp_radar_spatial_desk_v7';
 
 export function createInitialDoc() {
   return {

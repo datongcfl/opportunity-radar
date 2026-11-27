@@ -1,13 +1,19 @@
 // Non-overlapping Tree Layout Engine, Subtree Visibility, and Magnetic Snap Guides
 
-export const COL_GAP = 365;
-export const SIBLING_GAP = 28;
-export const TREE_GAP = 108;
+export const COL_GAP = 385;
+export const SIBLING_GAP = 34;
+export const TREE_GAP = 112;
 
 export function estimateCardHeight(node) {
-  if (node.status === 'falsified') return 68;
-  if (node.type === 'origin') return 198;
-  return 182;
+  if (node.status === 'falsified') {
+    const reasonLines = Math.max(1, Math.ceil(String(node.killReason || node.risk || '').length / 18));
+    return 66 + reasonLines * 18;
+  }
+  const titleLines = Math.max(1, Math.ceil(String(node.title || '').length / 13));
+  const summaryLines = Math.max(1, Math.ceil(String(node.summary || '').length / 17));
+  const specRows = (node.earn ? 1 : 0) + (node.barrier ? 1 : 0) + (node.radarPack || node.type === 'origin' ? 1 : 0);
+  const specHeight = specRows >= 2 ? 48 : (specRows === 1 ? 26 : 0);
+  return 92 + titleLines * 22 + summaryLines * 20 + specHeight;
 }
 
 /**

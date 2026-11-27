@@ -4,7 +4,7 @@ import { computeVisibleSet, tidyDeskLayout, computeSnap } from './layout.js';
 const store = new DeskStore();
 
 // Ensure clean initial non-overlapping coordinates on first load
-if (!localStorage.getItem('opp_radar_spatial_desk_v6')) {
+if (!localStorage.getItem('opp_radar_spatial_desk_v7')) {
   tidyDeskLayout(store.doc);
   store.saveQuiet();
 }
@@ -177,7 +177,7 @@ function renderEdges(visibleIds) {
     if (sameCol) {
       p0x = s.x + 134; p0y = s.y + 18;
       p3x = t.x + 134; p3y = t.y - 18;
-      const bow = 165;
+      const bow = 265;
       c1x = Math.max(p0x, p3x) + bow; c1y = p0y + 30;
       c2x = Math.max(p0x, p3x) + bow; c2y = p3y - 30;
     } else {
