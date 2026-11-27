@@ -127,6 +127,69 @@ function safeDecode(raw) {
   }
 }
 
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]', '::1']);
+const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * Check whether a Host header value (host or host:port) points strictly to loopback.
+ * @param {string} rawHost
+ * @returns {boolean}
+ */
+function isLoopbackHost(rawHost) {
+  const s = String(rawHost || '').trim().toLowerCase();
+  if (!s || /\s|\//.test(s)) return false;
+  if (s.startsWith('[')) {
+    const end = s.indexOf(']');
+    if (end < 0) return false;
+    const hostPart = s.slice(0, end + 1);
+    const rest = s.slice(end + 1);
+    if (rest && !/^:\d{1,5}$/.test(rest)) return false;
+    return hostPart === '[::1]';
+  }
+  const idx = s.lastIndexOf(':');
+  const hostPart = idx >= 0 && /^\d{1,5}$/.test(s.slice(idx + 1)) ? s.slice(0, idx) : s;
+  return LOOPBACK_HOSTS.has(hostPart);
+}
+
+/**
+ * Enforce local-only Host/Origin/Sec-Fetch-Site and JSON Content-Type guards against CSRF & DNS rebinding.
+ * @param {import('http').IncomingMessage} req
+ * @param {{ allowPublic?: boolean }} [options]
+ */
+function guardLocalRequest(req, { allowPublic = false } = {}) {
+  const hostHeader = typeof req.headers.host === 'string' ? req.headers.host : '';
+  if (!allowPublic && hostHeader && !isLoopbackHost(hostHeader)) {
+    throw new HttpError(403, '拒绝非本地 Host 访问（防 DNS rebinding）');
+  }
+
+  const originHeader = typeof req.headers.origin === 'string' ? req.headers.origin.trim() : '';
+  if (!allowPublic && originHeader) {
+    let parsedOrigin = null;
+    try {
+      parsedOrigin = new URL(originHeader);
+    } catch (_) {
+      throw new HttpError(403, '拒绝非法 Origin 请求');
+    }
+    if (!['http:', 'https:'].includes(parsedOrigin.protocol) || !isLoopbackHost(parsedOrigin.host)) {
+      throw new HttpError(403, '拒绝跨源 Origin 请求');
+    }
+  }
+
+  const fetchSite = typeof req.headers['sec-fetch-site'] === 'string'
+    ? req.headers['sec-fetch-site'].trim().toLowerCase()
+    : '';
+  if (!allowPublic && fetchSite === 'cross-site') {
+    throw new HttpError(403, '拒绝跨站请求');
+  }
+
+  if (WRITE_METHODS.has(req.method)) {
+    const ct = typeof req.headers['content-type'] === 'string' ? req.headers['content-type'].trim().toLowerCase() : '';
+    if (!ct.startsWith('application/json')) {
+      throw new HttpError(415, '写操作仅接受 Content-Type: application/json');
+    }
+  }
+}
+
 module.exports = {
   HttpError,
   MIME_TYPES,
@@ -135,4 +198,6 @@ module.exports = {
   readBody,
   send,
   safeDecode,
+  isLoopbackHost,
+  guardLocalRequest,
 };

@@ -30,11 +30,16 @@ export function computeVisibleSet(doc, onlyStarred = false) {
   const visibleIds = new Set();
   const childCountMap = new Map();
 
-  function countDescendants(id) {
+  function countDescendants(id, visiting = new Set()) {
+    if (childCountMap.has(id)) return childCountMap.get(id);
+    if (visiting.has(id)) return 0;
+    visiting.add(id);
     let total = 0;
     for (const ch of childrenMap.get(id) || []) {
-      total += 1 + countDescendants(ch);
+      if (visiting.has(ch)) continue;
+      total += 1 + countDescendants(ch, visiting);
     }
+    visiting.delete(id);
     childCountMap.set(id, total);
     return total;
   }
@@ -45,14 +50,17 @@ export function computeVisibleSet(doc, onlyStarred = false) {
     if (o.onDesk === false) continue;
 
     const queue = [o.id];
+    const bfsVisited = new Set();
     while (queue.length) {
       const curId = queue.shift();
+      if (bfsVisited.has(curId)) continue;
+      bfsVisited.add(curId);
       const cur = nodeMap.get(curId);
       if (!cur) continue;
       visibleIds.add(curId);
       if (cur.collapsed) continue;
       for (const chId of childrenMap.get(curId) || []) {
-        queue.push(chId);
+        if (!bfsVisited.has(chId)) queue.push(chId);
       }
     }
   }

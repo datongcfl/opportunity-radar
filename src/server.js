@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const defaultSeed = require('./seed.js');
-const { HttpError, MIME_TYPES, send, safeDecode } = require('./http-utils');
+const { HttpError, MIME_TYPES, send, safeDecode, isLoopbackHost, guardLocalRequest } = require('./http-utils');
 const { createGraphStore } = require('./graph-store');
 const { createExperienceStore } = require('./experience-store');
 const { createDeskStore } = require('./desk-store');
@@ -84,8 +84,10 @@ function createApp(options = {}) {
   const deskStore = createDeskStore({ dataDir });
   const radarBridge = createRadarBridge({ dataDir, radarDir: options.radarDir, pythonBin: options.pythonBin });
 
+  const allowPublic = !!options.allowPublic;
   const server = http.createServer(async (req, res) => {
     try {
+      guardLocalRequest(req, { allowPublic });
       const url = parseRequestUrl(req);
       if (await graphStore.handle(req, res, url)) return;
       if (await experienceStore.handle(req, res, url)) return;
@@ -109,7 +111,12 @@ if (require.main === module) {
   const port = parseInt(argVal('port') || process.env.PORT || '7100', 10);
   const host = argVal('host') || process.env.HOST || '127.0.0.1';
   const dataDir = argVal('data-dir') || process.env.DATA_DIR || DEFAULT_DATA_DIR;
-  const app = createApp({ dataDir });
+  const allowPublic = process.argv.includes('--unsafe-public') || process.env.ALLOW_PUBLIC === '1';
+  if (!allowPublic && !isLoopbackHost(host)) {
+    console.error(`安全拦截：禁止在未认证状态下直接监听非本地地址 ${host}。若明确知晓风险，请显式传入 --unsafe-public 或 ALLOW_PUBLIC=1。`);
+    process.exit(1);
+  }
+  const app = createApp({ dataDir, allowPublic });
   app.server.listen(port, host, () => {
     console.log(`商机嗅探器 MVP 已启动: http://${host}:${port}（版本见 VERSION 文件）`);
     console.log(`数据文件: ${path.join(app.dataDir, 'graph.json')}`);

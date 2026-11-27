@@ -57,7 +57,7 @@ export function createInitialDoc() {
       // First Origin on Desk: Real Verified Industry Case (Electronics Recycling / ITAD)
       {
         id: 'ewaste', type: 'origin', cat: '循环经济', title: '电脑与手机电子产品回收',
-        summary: 'C端标准手机回收已成巨头低净利红海（爱回收210亿营收1P净利率约1.6%）；真正的高毛利信息差在「中小企业退役电脑 ITAD + 合规数据擦除证明」与「高值垂直设备轻资产代卖」。',
+        summary: 'C端标准手机回收已成巨头低净利红海（爱回收2025年集团总营收210.5亿、集团GAAP净利率约1.6%，其中1P收入193.8亿、1P毛利率13.6%）；真正的高毛利信息差在「中小企业退役电脑 ITAD + 合规数据擦除证明」与「高值垂直设备轻资产代卖」。',
         earn: 'ITAD服务毛利 40%–60%', barrier: '数据合规信任 + 验机避暗病',
         firstStep: '48小时内联系本地 10 家 30–200 人设计/外贸/IT 公司行政，测试“免费上门估值 + 出具 NIST 硬盘擦除证书”意愿',
         risk: '红线1：无《废弃电器电子产品处理资格证书》严禁物理拆解；红线2：未实名核验来源涉刑法312条掩饰隐瞒犯罪所得罪',
@@ -95,11 +95,11 @@ export function createInitialDoc() {
       {
         id: 'ew_f1', type: 'monetize', title: '纯 C 端通用二手手机低买高卖囤货',
         summary: '个人直接跟爱回收、转转、京东以旧换新拼标准手机差价。',
-        earn: '1P毛利仅13%–14% / 净利~1.6%', barrier: '重资金 + 规模门槛',
+        earn: '1P毛利约13.6% / 集团净利~1.6%', barrier: '重资金 + 规模门槛',
         firstStep: '',
         risk: '头部平台靠 2000+ 门店摊薄履约费才刚盈利，个人囤货易被暗病机与行情跌价吃穿',
         evidence: [true, true, true, false, true, false],
-        status: 'falsified', killReason: '爱回收210亿营收1P净利率仅约1.6%，个人无规模必被巨头补贴与暗病机吃死',
+        status: 'falsified', killReason: '爱回收2025年集团总营收210.5亿（1P占193.8亿），集团GAAP净利率仅约1.6%，个人无规模必被巨头履约成本与暗病机吃死',
         did: 0, valid: 0,
         collapsed: false,
         x: 0, y: 140,
@@ -233,6 +233,11 @@ export class DeskStore {
     this.doc = this._load();
     this.undoStack = [];
     this.redoStack = [];
+    this._dirty = false;
+    this._pendingSync = false;
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pagehide', () => this.flushSync());
+    }
   }
 
   _load() {
@@ -248,12 +253,29 @@ export class DeskStore {
     return createInitialDoc();
   }
 
+  flushSync() {
+    if (!this._pendingSync) return;
+    clearTimeout(this._syncTimer);
+    this._pendingSync = false;
+    try {
+      fetch('/api/desk', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(this.doc),
+        keepalive: true,
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
   saveQuiet() {
+    this._dirty = true;
+    this._pendingSync = true;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.doc));
     } catch (_) {}
     clearTimeout(this._syncTimer);
     this._syncTimer = setTimeout(() => {
+      this._pendingSync = false;
       fetch('/api/desk', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -267,6 +289,8 @@ export class DeskStore {
       const res = await fetch('/api/desk');
       if (!res.ok) return false;
       const data = await res.json();
+      // Never overwrite edits the user already made while the boot GET was in flight.
+      if (this._dirty) return false;
       if (data && data.doc && Array.isArray(data.doc.nodes) && data.doc.nodes.length) {
         this.doc = data.doc;
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.doc)); } catch (_) {}
@@ -277,6 +301,7 @@ export class DeskStore {
   }
 
   checkpoint() {
+    this._dirty = true;
     this.undoStack.push(JSON.stringify(this.doc));
     if (this.undoStack.length > 40) this.undoStack.shift();
     this.redoStack = [];

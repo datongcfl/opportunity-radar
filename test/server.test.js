@@ -179,8 +179,34 @@ test('security and malformed input guards return 4xx without crashing server', a
     const http10NoHost = await sendRawHttp('GET /api/industries HTTP/1.0\r\n\r\n');
     assert.equal(http10NoHost, 200);
 
+    // Invalid or non-loopback Host must be rejected with 403 (DNS rebinding guard) without crashing
     const badHost = await sendRawHttp('GET /api/industries HTTP/1.1\r\nHost: invalid host/bad\r\nConnection: close\r\n\r\n');
-    assert.equal(badHost, 200);
+    assert.equal(badHost, 403);
+
+    const rebindHost = await sendRawHttp('GET /api/industries HTTP/1.1\r\nHost: evil.example:7100\r\nConnection: close\r\n\r\n');
+    assert.equal(rebindHost, 403);
+
+    // Cross-origin Origin, cross-site Sec-Fetch-Site, and text/plain CSRF writes must be blocked
+    const badOrigin = await fetch(`${srv.baseUrl}/api/desk`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Origin: 'https://evil.example' },
+      body: JSON.stringify({ nodes: [], edges: [] }),
+    });
+    assert.equal(badOrigin.status, 403);
+
+    const crossSite = await fetch(`${srv.baseUrl}/api/desk`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Sec-Fetch-Site': 'cross-site' },
+      body: JSON.stringify({ nodes: [], edges: [] }),
+    });
+    assert.equal(crossSite.status, 403);
+
+    const textPlainCsrf = await fetch(`${srv.baseUrl}/api/desk`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ nodes: [], edges: [] }),
+    });
+    assert.equal(textPlainCsrf.status, 415);
 
     // Malformed JSON -> 400 (not 500)
     const badJson = await fetch(`${srv.baseUrl}/api/expand`, {
@@ -430,6 +456,96 @@ test('desk persistence and radar bridge execute cleanly in isolated temp dir', a
       // Placeholder is unreachable -> honest none level (never fakes evidence!)
       assert.equal(probeData.detail.coverage.summary.none, 2);
     }
+  } finally {
+    await srv.close();
+  }
+});
+
+test('desk DAG integrity, frontend cycle safety, and radar SSRF guards block bad inputs', async () => {
+  const { pathToFileURL } = require('node:url');
+  const { validatePublicHttpUrl } = require('../src/radar-bridge');
+  const srv = await startTempServer();
+  try {
+    // 1. Duplicate node IDs rejected with 400
+    const dupRes = await fetch(`${srv.baseUrl}/api/desk`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nodes: [
+          { id: 'a', type: 'origin', title: 'A' },
+          { id: 'a', type: 'monetize', title: 'A2' },
+        ],
+        edges: [],
+      }),
+    });
+    assert.equal(dupRes.status, 400);
+
+    // 2. Dangling edge target rejected with 400
+    const danglingRes = await fetch(`${srv.baseUrl}/api/desk`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nodes: [{ id: 'a', type: 'origin', title: 'A' }],
+        edges: [{ id: 'e1', source: 'a', target: 'missing' }],
+      }),
+    });
+    assert.equal(danglingRes.status, 400);
+
+    // 3. Cycle a -> b -> a rejected with 400
+    const cycleRes = await fetch(`${srv.baseUrl}/api/desk`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nodes: [
+          { id: 'a', type: 'origin', title: 'A' },
+          { id: 'b', type: 'monetize', title: 'B' },
+        ],
+        edges: [
+          { id: 'e1', source: 'a', target: 'b' },
+          { id: 'e2', source: 'b', target: 'a' },
+        ],
+      }),
+    });
+    assert.equal(cycleRes.status, 400);
+
+    // 4. Frontend layout.js computeVisibleSet must survive cyclic data without stack overflow
+    const layoutMod = await import(pathToFileURL(path.join(__dirname, '..', 'src', 'static', 'desk', 'layout.js')).href);
+    const vis = layoutMod.computeVisibleSet({
+      nodes: [
+        { id: 'a', type: 'origin', title: 'A', onDesk: true },
+        { id: 'b', type: 'monetize', title: 'B', onDesk: true },
+      ],
+      edges: [
+        { id: 'e1', source: 'a', target: 'b' },
+        { id: 'e2', source: 'b', target: 'a' },
+      ],
+    });
+    assert.ok(vis.visibleIds.has('a'));
+    assert.ok(vis.visibleIds.has('b'));
+
+    // 5. SSRF URLs blocked at /api/radar/draft-urls and validatePublicHttpUrl
+    for (const badUrl of [
+      'http://127.0.0.1:7100/api/desk',
+      'http://169.254.169.254/latest/meta-data/',
+      'http://10.0.0.1/internal',
+      'http://[::1]:8080/',
+      'http://localhost/admin',
+      'https://user:pass@example.com/',
+    ]) {
+      await assert.rejects(() => validatePublicHttpUrl(badUrl));
+      const ssrfRes = await fetch(`${srv.baseUrl}/api/radar/draft-urls`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pack: 'ewaste-recycle', urls: [badUrl] }),
+      });
+      assert.equal(ssrfRes.status, 400, `Expected 400 SSRF block for ${badUrl}`);
+    }
+    // DNS rebinding to loopback IP blocked even for public-looking domain
+    await assert.rejects(() =>
+      validatePublicHttpUrl('https://rebind.example.com/', async () => [{ address: '127.0.0.1', family: 4 }])
+    );
+    const okUrl = await validatePublicHttpUrl('https://example.com/path', async () => [{ address: '93.184.216.34', family: 4 }]);
+    assert.equal(okUrl, 'https://example.com/path');
   } finally {
     await srv.close();
   }

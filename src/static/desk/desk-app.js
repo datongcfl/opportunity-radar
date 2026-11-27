@@ -72,33 +72,39 @@ function applyTransform() {
   drawMinimap();
 }
 
+let cameraRafId = null;
+
 function flyToWorld(wx, wy, targetZoom = Math.max(ui.zoom, 0.86)) {
   ui.flyTarget = {
     panX: -wx * targetZoom,
     panY: -wy * targetZoom,
     zoom: targetZoom,
   };
+  if (cameraRafId === null) {
+    cameraRafId = requestAnimationFrame(tickCamera);
+  }
 }
 
 function tickCamera() {
-  if (ui.flyTarget) {
-    ui.panX += (ui.flyTarget.panX - ui.panX) * 0.2;
-    ui.panY += (ui.flyTarget.panY - ui.panY) * 0.2;
-    ui.zoom += (ui.flyTarget.zoom - ui.zoom) * 0.2;
+  cameraRafId = null;
+  if (!ui.flyTarget) return;
+  ui.panX += (ui.flyTarget.panX - ui.panX) * 0.2;
+  ui.panY += (ui.flyTarget.panY - ui.panY) * 0.2;
+  ui.zoom += (ui.flyTarget.zoom - ui.zoom) * 0.2;
+  applyTransform();
+  if (
+    Math.abs(ui.flyTarget.panX - ui.panX) < 0.6
+    && Math.abs(ui.flyTarget.panY - ui.panY) < 0.6
+    && Math.abs(ui.flyTarget.zoom - ui.zoom) < 0.005
+  ) {
+    ui.panX = ui.flyTarget.panX;
+    ui.panY = ui.flyTarget.panY;
+    ui.zoom = ui.flyTarget.zoom;
+    ui.flyTarget = null;
     applyTransform();
-    if (
-      Math.abs(ui.flyTarget.panX - ui.panX) < 0.6
-      && Math.abs(ui.flyTarget.panY - ui.panY) < 0.6
-      && Math.abs(ui.flyTarget.zoom - ui.zoom) < 0.005
-    ) {
-      ui.panX = ui.flyTarget.panX;
-      ui.panY = ui.flyTarget.panY;
-      ui.zoom = ui.flyTarget.zoom;
-      ui.flyTarget = null;
-      applyTransform();
-    }
+    return;
   }
-  requestAnimationFrame(tickCamera);
+  cameraRafId = requestAnimationFrame(tickCamera);
 }
 
 // ---- Render Top Origin Bookmarks ----
@@ -318,9 +324,9 @@ function renderCards(visibleIds, childCountMap) {
           ${radarBadgeText ? `<button class="radar-pill-trigger" data-act="radar" title="打开 radar 模块覆盖度矩阵与真实来源账本">${esc(radarBadgeText)}</button>` : ''}
         </div>
         <div class="card-footer">
-          <div class="evidence-meter" title="双击卡片逐项勾选 6 维证据">
+          <div class="evidence-meter" title="双击卡片勾选 6 维人工推演进度（草稿）；客观核验请看上方 RADAR 徽标">
             <span class="ticks">${ticksHtml}</span>
-            <span>${filledEv}/6 证据</span>
+            <span>${filledEv}/6 人工自评</span>
           </div>
           <div class="card-mini-actions">
             ${n.type === 'origin'
@@ -1281,7 +1287,11 @@ function renderRadarModalContent() {
 
   const sum = cov.summary || {};
   const clSum = (detail.claims && detail.claims.summary) || { total: 0, high: 0, contested: 0 };
-  $('radarModalSub').textContent = `${(detail.packSpec && detail.packSpec.title) || detail.pack} · 最近审计 ${detail.state && detail.state.created_at ? detail.state.created_at.slice(0, 19).replace('T', ' ') : '已就绪'}`;
+  const opts = (detail.state && detail.state.options) || {};
+  const verifyModeLabel = (opts.verify_quotes || opts.web)
+    ? '联网原文核验'
+    : '离线账本重算（未重新联网核验）';
+  $('radarModalSub').textContent = `${(detail.packSpec && detail.packSpec.title) || detail.pack} · ${verifyModeLabel} · ${detail.state && detail.state.created_at ? detail.state.created_at.slice(0, 19).replace('T', ' ') : '已就绪'}`;
   $('radarSummaryBar').innerHTML = `
     <span class="lvl-badge lvl-strong">STRONG ${sum.strong || 0}</span>
     <span class="lvl-badge lvl-evidence">EVIDENCE ${sum.evidence || 0}</span>
@@ -1489,17 +1499,21 @@ $('radarPackSelect').onchange = async (e) => {
   await loadRadarPackDetail(slug);
 };
 
-$('radarRunBtn').onclick = async () => {
+async function triggerRadarAudit({ web = false, verifyQuotes = false } = {}) {
   const slug = ui.radarModal.pack;
   if (!slug) { toast('请先选择要运行的 radar pack，或点击新建探针'); return; }
-  const btn = $('radarRunBtn');
-  btn.disabled = true;
-  btn.textContent = '审计运行中…';
+  const offlineBtn = $('radarRunBtn');
+  const verifyBtn = $('radarVerifyBtn');
+  offlineBtn.disabled = true;
+  verifyBtn.disabled = true;
+  const activeBtn = verifyQuotes ? verifyBtn : offlineBtn;
+  const origLabel = activeBtn.textContent;
+  activeBtn.textContent = verifyQuotes ? '联网核验中…' : '离线重算中…';
   try {
     const res = await fetch('/api/radar/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pack: slug }),
+      body: JSON.stringify({ pack: slug, web, verifyQuotes }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
@@ -1507,14 +1521,20 @@ $('radarRunBtn').onclick = async () => {
     ui.radarModal.probeMode = false;
     renderRadarModalContent();
     await refreshRadarPacks();
-    toast(`已完成 ${slug} 的 radar 覆盖度与主张重算`);
+    toast(verifyQuotes
+      ? `已完成 ${slug} 的联网引文核验与主张审计`
+      : `已完成 ${slug} 的离线账本重算（未重新联网抓取；如需核验引文请点「联网核验引文」）`);
   } catch (err) {
     toast('运行失败: ' + err.message);
   } finally {
-    btn.disabled = false;
-    btn.textContent = '运行 radar 重算';
+    offlineBtn.disabled = false;
+    verifyBtn.disabled = false;
+    activeBtn.textContent = origLabel;
   }
-};
+}
+
+$('radarRunBtn').onclick = () => triggerRadarAudit({ web: false, verifyQuotes: false });
+$('radarVerifyBtn').onclick = () => triggerRadarAudit({ web: true, verifyQuotes: true });
 
 $('radarCloseBtn').onclick = () => radarModal.classList.remove('open');
 radarModal.addEventListener('click', e => { if (e.target === radarModal) radarModal.classList.remove('open'); });
@@ -1576,7 +1596,6 @@ window.addEventListener('keydown', (e) => {
 applyTheme(store.doc.theme || 'stone-dark', false);
 fitAllCards(false);
 renderAll();
-tickCamera();
 
 store.loadFromServer().then((loaded) => {
   if (loaded) {

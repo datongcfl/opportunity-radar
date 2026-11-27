@@ -86,7 +86,8 @@
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <select class="form-select" id="radarPackSelect" style="width:auto;margin:0;padding:5px 10px;font-size:12px;"></select>
           <button class="pill-btn" id="radarProbeModeBtn" title="把当前画布分支一键翻译成 radar pack.json 并启动首轮搜证">新建探针</button>
-          <button class="pill-btn primary" id="radarRunBtn">运行 radar 重算</button>
+          <button class="pill-btn" id="radarRunBtn" title="基于当前 seeds 离线重算覆盖矩阵与主张（不重新抓取网页）">离线重算统计</button>
+          <button class="pill-btn primary" id="radarVerifyBtn" title="联网抓取页面并逐条核验 quotes 原文，刷新 strong/high 证据">联网核验引文</button>
           <button class="pill-btn" id="radarCloseBtn">关闭</button>
         </div>
       </div>

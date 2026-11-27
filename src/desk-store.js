@@ -1,6 +1,62 @@
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { clip, readBody, send } = require('./http-utils');
+
+/**
+ * Validate node ID uniqueness, endpoint existence, and DAG acyclicity for desk graphs.
+ * @param {Array<{id: string}>} nodes
+ * @param {Array<{source: string, target: string}>} edges
+ * @param {Array<{source: string, target: string}>} bridges
+ * @returns {string | null} Error message if invalid, otherwise null.
+ */
+function validateDeskGraph(nodes, edges, bridges) {
+  const nodeIds = new Set();
+  for (const n of nodes) {
+    if (nodeIds.has(n.id)) return `桌面节点 ID 重复: ${n.id}`;
+    nodeIds.add(n.id);
+  }
+
+  const adj = new Map();
+  for (const e of edges) {
+    if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) {
+      return `桌面连线引用了不存在的节点: ${e.source} -> ${e.target}`;
+    }
+    if (e.source === e.target) {
+      return `桌面连线不允许自环: ${e.source}`;
+    }
+    if (!adj.has(e.source)) adj.set(e.source, []);
+    adj.get(e.source).push(e.target);
+  }
+
+  // 3-color DFS cycle detection (0=unvisited, 1=visiting, 2=done)
+  const state = new Map();
+  function hasCycle(u) {
+    state.set(u, 1);
+    for (const v of adj.get(u) || []) {
+      const st = state.get(v) || 0;
+      if (st === 1) return true;
+      if (st === 0 && hasCycle(v)) return true;
+    }
+    state.set(u, 2);
+    return false;
+  }
+  for (const id of nodeIds) {
+    if ((state.get(id) || 0) === 0 && hasCycle(id)) {
+      return '桌面连线存在环状结构，已拒绝保存以防渲染死循环';
+    }
+  }
+
+  for (const br of bridges) {
+    if (!nodeIds.has(br.source) || !nodeIds.has(br.target)) {
+      return `跨界桥引用了不存在的节点: ${br.source} -> ${br.target}`;
+    }
+    if (br.source === br.target) {
+      return `跨界桥不允许指向自身: ${br.source}`;
+    }
+  }
+  return null;
+}
 
 /**
  * Persist and serve the Spatial Opportunity Desk workspace (`desk.json`) isolated per `dataDir`.
@@ -24,9 +80,15 @@ function createDeskStore({ dataDir }) {
 
   function saveDesk(doc) {
     if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-    const tmp = DESK_FILE + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(doc, null, 2), 'utf8');
-    fs.renameSync(tmp, DESK_FILE);
+    const tmp = `${DESK_FILE}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`;
+    try {
+      fs.writeFileSync(tmp, JSON.stringify(doc, null, 2), 'utf8');
+      fs.renameSync(tmp, DESK_FILE);
+    } finally {
+      if (fs.existsSync(tmp)) {
+        try { fs.unlinkSync(tmp); } catch (_) {}
+      }
+    }
   }
 
   async function handle(req, res, url) {
@@ -82,6 +144,11 @@ function createDeskStore({ dataDir }) {
           label: clip(br && br.label, 80) || '跨界相通点',
         })).filter(br => br.source && br.target),
       };
+      const graphErr = validateDeskGraph(cleanDoc.nodes, cleanDoc.edges, cleanDoc.bridges);
+      if (graphErr) {
+        send(res, 400, { error: graphErr });
+        return true;
+      }
       saveDesk(cleanDoc);
       send(res, 200, { ok: true, updatedAt: cleanDoc.updatedAt });
       return true;

@@ -1,10 +1,90 @@
+const crypto = require('crypto');
+const dns = require('dns').promises;
 const fs = require('fs');
+const net = require('net');
 const path = require('path');
 const { execFile } = require('child_process');
 const { clip, readBody, send, safeDecode } = require('./http-utils');
 
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,38}$/;
 const CLAIM_CATEGORIES = new Set(['pricing', 'cac', 'demand', 'delivery', 'compliance']);
+const BLOCKED_HOST_SUFFIXES = ['.localhost', '.local', '.internal', '.arpa', '.localdomain'];
+
+function isDisallowedIpv4(ip) {
+  const parts = ip.split('.').map(Number);
+  if (parts.length !== 4 || parts.some(n => Number.isNaN(n) || n < 0 || n > 255)) return true;
+  const [a, b] = parts;
+  if (a === 0 || a === 10 || a === 127) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64.0.0/10
+  if (a === 169 && b === 254) return true; // link-local / cloud metadata
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 192 && b === 0) return true;
+  if (a === 198 && (b === 18 || b === 19)) return true;
+  if (a >= 224) return true; // multicast / reserved
+  return false;
+}
+
+function isDisallowedIp(rawIp) {
+  const ip = String(rawIp || '').split('%')[0].toLowerCase();
+  const ver = net.isIP(ip);
+  if (ver === 4) return isDisallowedIpv4(ip);
+  if (ver === 6) {
+    if (ip === '::' || ip === '::1') return true;
+    if (ip.startsWith('::ffff:')) return isDisallowedIpv4(ip.slice('::ffff:'.length));
+    if (ip.startsWith('fc') || ip.startsWith('fd')) return true; // ULA fc00::/7
+    if (/^fe[89ab]/.test(ip)) return true; // link-local fe80::/10
+    if (ip.startsWith('ff')) return true; // multicast
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Validate an external http(s) URL before fetching, blocking SSRF targets (userinfo, localhost, private/link-local IPs).
+ * @param {string} rawUrl
+ * @param {typeof dns.lookup} [lookupFn]
+ * @returns {Promise<string>} Normalized URL string if safe, otherwise throws Error.
+ */
+async function validatePublicHttpUrl(rawUrl, lookupFn = dns.lookup) {
+  let parsed;
+  try {
+    parsed = new URL(String(rawUrl || '').trim());
+  } catch (_) {
+    throw new Error('URL 格式非法: ' + clip(rawUrl, 80));
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('仅支持 http(s) URL');
+  }
+  if (parsed.username || parsed.password) {
+    throw new Error('拒绝包含 userinfo 的 URL');
+  }
+  const host = (parsed.hostname || '').replace(/\.+$/, '').toLowerCase();
+  if (!host) throw new Error('URL 缺少主机名');
+  if (host === 'localhost' || BLOCKED_HOST_SUFFIXES.some(suf => host.endsWith(suf))) {
+    throw new Error(`拒绝访问本地或内网地址: ${host}`);
+  }
+  const bareHost = host.startsWith('[') && host.endsWith(']') ? host.slice(1, -1) : host;
+  if (net.isIP(bareHost)) {
+    if (isDisallowedIp(bareHost)) throw new Error(`拒绝访问私网/回环/保留 IP: ${bareHost}`);
+    return parsed.toString();
+  }
+  let records;
+  try {
+    records = await lookupFn(bareHost, { all: true });
+  } catch (err) {
+    throw new Error(`域名解析失败: ${bareHost}`);
+  }
+  if (!Array.isArray(records) || !records.length) {
+    throw new Error(`域名无可用解析记录: ${bareHost}`);
+  }
+  for (const rec of records) {
+    if (isDisallowedIp(rec.address)) {
+      throw new Error(`拒绝访问解析到私网/回环地址的域名: ${bareHost} -> ${rec.address}`);
+    }
+  }
+  return parsed.toString();
+}
 
 function readJsonSafe(filePath) {
   try {
@@ -17,9 +97,15 @@ function readJsonSafe(filePath) {
 
 function writeJsonAtomic(filePath, obj) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  const tmp = filePath + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(obj, null, 2), 'utf8');
-  fs.renameSync(tmp, filePath);
+  const tmp = `${filePath}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`;
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(obj, null, 2), 'utf8');
+    fs.renameSync(tmp, filePath);
+  } finally {
+    if (fs.existsSync(tmp)) {
+      try { fs.unlinkSync(tmp); } catch (_) {}
+    }
+  }
 }
 
 function readJsonlSafe(filePath) {
@@ -131,6 +217,17 @@ function createRadarBridge({ dataDir, radarDir, pythonBin }) {
   const workspaceDir = path.join(dataDir, 'radar-workspace');
   const localRunsDir = path.join(dataDir, 'radar-runs');
   const pyCmd = pythonBin || process.env.PYTHON_BIN || 'python';
+  const slugQueues = new Map();
+
+  function withSlugLock(slug, task) {
+    const prev = slugQueues.get(slug) || Promise.resolve();
+    const next = prev.then(task, task);
+    const tail = next.then(() => {}, () => {}).finally(() => {
+      if (slugQueues.get(slug) === tail) slugQueues.delete(slug);
+    });
+    slugQueues.set(slug, tail);
+    return next;
+  }
 
   function isEngineAvailable() {
     return fs.existsSync(path.join(resolvedRadarDir, 'radar', '__main__.py'));
@@ -374,9 +471,13 @@ function createRadarBridge({ dataDir, radarDir, pythonBin }) {
     const wsSeeds = path.join(workspaceDir, 'seeds', slug + '.json');
     writeJsonAtomic(wsPack, packObj);
 
-    const seedUrls = Array.isArray(body.seedUrls)
-      ? body.seedUrls.map(u => String(u || '').trim()).filter(u => /^https?:\/\//.test(u)).slice(0, 8)
+    const rawSeedUrls = Array.isArray(body.seedUrls)
+      ? body.seedUrls.map(u => String(u || '').trim()).filter(Boolean).slice(0, 8)
       : [];
+    const seedUrls = [];
+    for (const u of rawSeedUrls) {
+      seedUrls.push(await validatePublicHttpUrl(u));
+    }
     const runGithub = body.runGithub !== false;
 
     // Seed with either real drafted URLs or an explicit unreachable placeholder (honest 0-evidence baseline)
@@ -441,12 +542,12 @@ function createRadarBridge({ dataDir, radarDir, pythonBin }) {
         return true;
       }
       try {
-        const result = await execRadarRun(slug, {
+        const result = await withSlugLock(slug, () => execRadarRun(slug, {
           title: b.title,
           github: !!b.github,
           web: !!b.web,
           verifyQuotes: !!b.verifyQuotes,
-        });
+        }));
         send(res, 200, result.detail);
       } catch (err) {
         send(res, 400, { error: err.message });
@@ -461,8 +562,9 @@ function createRadarBridge({ dataDir, radarDir, pythonBin }) {
         send(res, 400, { error: '生成探针必须提供行业标题' });
         return true;
       }
+      const lockSlug = SLUG_RE.test(clip(b.slug, 38).toLowerCase()) ? clip(b.slug, 38).toLowerCase() : '_probe';
       try {
-        const result = await createProbeFromCanvas(b);
+        const result = await withSlugLock(lockSlug, () => createProbeFromCanvas(b));
         send(res, 201, result);
       } catch (err) {
         send(res, 400, { error: err.message });
@@ -477,16 +579,25 @@ function createRadarBridge({ dataDir, radarDir, pythonBin }) {
         send(res, 400, { error: 'pack 标识格式非法' });
         return true;
       }
-      const urls = Array.isArray(b.urls)
-        ? b.urls.map(u => String(u || '').trim()).filter(u => /^https?:\/\//.test(u)).slice(0, 8)
+      const rawUrls = Array.isArray(b.urls)
+        ? b.urls.map(u => String(u || '').trim()).filter(Boolean).slice(0, 8)
         : [];
-      if (!urls.length) {
+      if (!rawUrls.length) {
         send(res, 400, { error: '请至少提供 1 条合法的 http(s) URL' });
+        return true;
+      }
+      const urls = [];
+      try {
+        for (const u of rawUrls) {
+          urls.push(await validatePublicHttpUrl(u));
+        }
+      } catch (err) {
+        send(res, 400, { error: err.message });
         return true;
       }
       const covers = Array.isArray(b.covers) ? b.covers.map(c => clip(c, 8)).filter(Boolean) : null;
       try {
-        const result = await draftUrlsIntoPack(slug, urls, covers);
+        const result = await withSlugLock(slug, () => draftUrlsIntoPack(slug, urls, covers));
         send(res, 200, result);
       } catch (err) {
         send(res, 400, { error: err.message });
@@ -551,15 +662,21 @@ function createRadarBridge({ dataDir, radarDir, pythonBin }) {
         return true;
       }
 
-      const prevContent = fs.existsSync(claimsFile) ? fs.readFileSync(claimsFile, 'utf8') : null;
-      writeJsonAtomic(claimsFile, { schema_version: 1, pack: slug, claims: list });
       try {
-        const evaluated = await execRadarClaims(slug);
+        const evaluated = await withSlugLock(slug, async () => {
+          const prevContent = fs.existsSync(claimsFile) ? fs.readFileSync(claimsFile, 'utf8') : null;
+          writeJsonAtomic(claimsFile, { schema_version: 1, pack: slug, claims: list });
+          try {
+            return await execRadarClaims(slug);
+          } catch (err) {
+            // Rollback invalid claims edit so workspace never stores broken schema
+            if (prevContent !== null) fs.writeFileSync(claimsFile, prevContent, 'utf8');
+            else { try { fs.unlinkSync(claimsFile); } catch (_) {} }
+            throw err;
+          }
+        });
         send(res, 200, evaluated);
       } catch (err) {
-        // Rollback invalid claims edit so workspace never stores broken schema
-        if (prevContent !== null) fs.writeFileSync(claimsFile, prevContent, 'utf8');
-        else { try { fs.unlinkSync(claimsFile); } catch (_) {} }
         send(res, 400, { error: err.message });
       }
       return true;
@@ -583,4 +700,5 @@ function createRadarBridge({ dataDir, radarDir, pythonBin }) {
 module.exports = {
   createRadarBridge,
   buildPackFromDeskTree,
+  validatePublicHttpUrl,
 };
