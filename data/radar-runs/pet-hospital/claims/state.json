@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "run": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\radar\\runs\\pet-hospital-demo",
+  "pack": "pet-hospital",
+  "created_at": "2026-11-26T23:52:39-08:00",
+  "radar_version": "1.7.0",
+  "claims_sha256": "e7124b934db900699485f3fb99b69f2d37fa1788d452112433e54a0c24ae8178",
+  "count": 3
+}

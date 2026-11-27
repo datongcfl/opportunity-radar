@@ -85,6 +85,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <select class="form-select" id="radarPackSelect" style="width:auto;margin:0;padding:5px 10px;font-size:12px;"></select>
+          <button class="pill-btn" id="radarProbeModeBtn" title="把当前画布分支一键翻译成 radar pack.json 并启动首轮搜证">新建探针</button>
           <button class="pill-btn primary" id="radarRunBtn">运行 radar 重算</button>
           <button class="pill-btn" id="radarCloseBtn">关闭</button>
         </div>
@@ -92,6 +93,7 @@
       <div class="radar-summary-bar" id="radarSummaryBar">加载中…</div>
       <div class="radar-tabs">
         <button class="radar-tab active" data-rtab="matrix">模块×子系统覆盖矩阵</button>
+        <button class="radar-tab" data-rtab="claims">商业主张核验 (Claims)</button>
         <button class="radar-tab" data-rtab="sources">已核验来源账本</button>
         <button class="radar-tab" data-rtab="gaps">空白与单源缺口 (gaps.md)</button>
       </div>

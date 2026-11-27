@@ -51,6 +51,9 @@ DESIGN.md            # 设计文档（API、数据模型、交互）
 | GET | `/api/radar/packs` | 列出可用的 `radar` 行业证据包与最新覆盖摘要 |
 | GET | `/api/radar/runs/:pack` | 获取指定 `radar` 包的模块覆盖度矩阵、来源账本与缺口 |
 | POST | `/api/radar/run` | 调用同级 `radar` 引擎实时重算指定分析包的证据覆盖度 |
+| POST | `/api/radar/probe` | 一键将画布行业分支翻译为 `pack.json` 并启动首轮 `radar` 搜证探针 |
+| POST | `/api/radar/draft-urls` | 从贴入的公开 URL 调用 `radar draft` 自动抓证并重算覆盖度 |
+| GET/POST | `/api/radar/claims` | 读写商业主张（客单/获客/合规/履约）并调用 `radar claims` 规则引擎算置信度 |
 | GET | `/api/industries` | 行业词库列表（支持 `?all=true` 与 `?q=` 搜索） |
 | POST | `/api/industries` | 发起新行业（必须同时填写第一条变现路径） |
 | GET | `/api/graph?industry=<id>` | 获取某个行业的可见图谱 |

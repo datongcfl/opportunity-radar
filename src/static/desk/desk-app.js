@@ -294,9 +294,10 @@ function renderCards(visibleIds, childCountMap) {
         `<span class="tick ${n.evidence && n.evidence[i] ? 'on' : ''}" title="${esc(dim)}"></span>`
       ).join('');
       const boundPack = n.radarPack ? ui.radarPacks.find(p => p.pack === n.radarPack) : null;
+      const claimsCnt = boundPack && boundPack.claimsSummary ? boundPack.claimsSummary.total : 0;
       const radarBadgeText = boundPack && boundPack.summary
-        ? `RADAR · ${boundPack.summary.strong || 0}强/${boundPack.summary.evidence || 0}证 · ${boundPack.sourcesCount}源`
-        : (n.radarPack ? `RADAR · ${n.radarPack}` : (n.type === 'origin' ? '关联 radar ↗' : ''));
+        ? `RADAR · ${boundPack.summary.strong || 0}强/${boundPack.summary.evidence || 0}证 · ${boundPack.sourcesCount}源${claimsCnt ? ` · ${claimsCnt}主张` : ''}`
+        : (n.radarPack ? `RADAR · ${n.radarPack}` : (n.type === 'origin' ? '⚡ 生成 radar 探针' : ''));
 
       el.innerHTML = `
         <div class="card-kicker">
@@ -1099,8 +1100,24 @@ function fitAllCards(animate = false) {
 $('zoomReadout').onclick = () => { fitAllCards(true); };
 $('themeSelect').onchange = (e) => applyTheme(e.target.value);
 
-// ---- Live Radar Coverage Matrix & Source Ledger Modal ----
+// ---- Live Radar Coverage Matrix, One-Click Probe & Commercial Claims Modal ----
 const radarModal = $('radarModal');
+const CLAIM_CAT_LABEL = {
+  pricing: '客单 / 毛利',
+  cac: '获客成本',
+  demand: '需求实证',
+  delivery: '履约交付',
+  compliance: '合规红线',
+};
+const REASON_LABEL = {
+  single_source: '单源/同域上限 0.55',
+  no_verified_source: '缺少 web 原文核验',
+  unsupported_by_sources: '来源未覆盖该模块',
+  unsupported_by_verified_sources: '已核验源未覆盖',
+  no_quote: '缺少原文引文',
+  proprietary_reference: '含专有商业许可来源 (上限 0.40)',
+  contradiction: '存在矛盾主张 (contested)',
+};
 
 async function refreshRadarPacks() {
   try {
@@ -1114,30 +1131,131 @@ async function refreshRadarPacks() {
   } catch (_) {}
 }
 
+function getBranchNodesForOrigin(originId) {
+  const ids = store.subtreeIdsOf(originId);
+  return store.doc.nodes.filter(x => ids.has(x.id) && x.id !== originId);
+}
+
 async function openRadarModal(node) {
   ui.radarModal.nodeId = node.id;
-  const currentSlug = node.radarPack || (ui.radarPacks[0] ? ui.radarPacks[0].pack : 'pet-hospital');
+  ui.radarModal.probeMode = !node.radarPack;
+  const currentSlug = node.radarPack || '';
   ui.radarModal.pack = currentSlug;
   ui.radarModal.tab = 'matrix';
   radarModal.classList.add('open');
 
   $('radarModalTitle').textContent = `radar 证据审计 · ${node.title}`;
-  const sel = $('radarPackSelect');
-  sel.innerHTML = `<option value="">（未绑定 radar pack）</option>` + ui.radarPacks.map(p =>
-    `<option value="${esc(p.pack)}" ${p.pack === currentSlug ? 'selected' : ''}>${esc(p.pack)} · ${esc(p.title)}</option>`
-  ).join('');
+  renderRadarPackSelector(currentSlug);
 
-  await loadRadarPackDetail(currentSlug);
+  if (!currentSlug) {
+    renderProbeComposer(node);
+  } else {
+    await loadRadarPackDetail(currentSlug);
+  }
+}
+
+function renderRadarPackSelector(selectedSlug) {
+  const sel = $('radarPackSelect');
+  sel.innerHTML = `<option value="">（未绑定 / 新建探针）</option>` + ui.radarPacks.map(p =>
+    `<option value="${esc(p.pack)}" ${p.pack === selectedSlug ? 'selected' : ''}>${esc(p.pack)} · ${esc(p.title)}</option>`
+  ).join('');
+}
+
+function renderProbeComposer(node) {
+  ui.radarModal.probeMode = true;
+  const branches = getBranchNodesForOrigin(node.id).filter(b => b.status !== 'falsified');
+  const suggestedSlug = String(node.title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 24) || ('probe-' + node.id.replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 10));
+
+  $('radarModalSub').textContent = '一键将当前桌面分支翻译为 radar pack.json 并启动首轮公网搜证';
+  $('radarSummaryBar').innerHTML = `
+    <span class="lvl-badge lvl-evidence">画布转探针</span>
+    <span style="color:var(--color-text-secondary);">检测到 <b>${branches.length}</b> 张有效下游分支卡，将自动映射为 radar 审计模块</span>
+  `;
+
+  $('radarBody').innerHTML = `
+    <div class="inline-panel" style="margin-top:0;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">⚡ 为「${esc(node.title)}」生成 radar 行业探针</div>
+      <div class="form-row">
+        <div>
+          <label style="display:block;font-size:11px;color:var(--color-text-muted);margin-bottom:4px;">Pack 标识（英文小写/短横线）</label>
+          <input class="form-input" id="probeSlug" value="${esc(suggestedSlug)}" placeholder="如: rpa-automation">
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;color:var(--color-text-muted);margin-bottom:4px;">GitHub 检索关键词（选填，逗号分隔）</label>
+          <input class="form-input" id="probeGhQueries" placeholder="例: ${esc(node.title)} in:readme">
+        </div>
+      </div>
+      <label style="display:block;font-size:11px;color:var(--color-text-muted);margin-bottom:4px;">已知公开竞品 / 标准 / 报价单 URL（选填，每行一条，将自动抓取并原文核验）</label>
+      <textarea class="form-textarea" id="probeUrls" rows="3" placeholder="https://github.com/...\nhttps://..."></textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:4px;">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary);cursor:pointer;">
+          <input type="checkbox" id="probeRunGh" checked> 同步检索 GitHub 公开开源实现作为首轮种子
+        </label>
+        <button class="pill-btn primary" id="launchProbeBtn">一键生成 pack 并跑首轮搜证</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:11.5px;color:var(--color-text-muted);">
+      将映射的分支卡片：${branches.length ? branches.map(b => `<span class="spec-pill" style="margin-right:4px;">${esc(b.title)}</span>`).join('') : '（当前尚无子分支，将自动生成 4 个标准商业核验模块：获客 / 定价 / 交付 / 合规）'}
+    </div>
+  `;
+
+  $('launchProbeBtn').onclick = async () => {
+    const btn = $('launchProbeBtn');
+    const slug = $('probeSlug').value.trim().toLowerCase();
+    const ghRaw = $('probeGhQueries').value.trim();
+    const urls = $('probeUrls').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const runGithub = $('probeRunGh').checked;
+
+    btn.disabled = true;
+    btn.textContent = '正在生成 pack 并运行 radar 搜证…';
+    try {
+      const res = await fetch('/api/radar/probe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug,
+          title: node.title,
+          originNode: node,
+          branchNodes: branches,
+          githubQueries: ghRaw ? ghRaw.split(/[,，]/).map(s => s.trim()).filter(Boolean) : [],
+          seedUrls: urls,
+          runGithub,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      store.checkpoint();
+      node.radarPack = data.pack;
+      store.saveQuiet();
+      ui.radarModal.probeMode = false;
+      ui.radarModal.pack = data.pack;
+      ui.radarModal.detail = data.detail;
+      ui.radarModal.tab = 'matrix';
+      await refreshRadarPacks();
+      renderRadarPackSelector(data.pack);
+      renderRadarModalContent();
+      toast(`探针 ${data.pack} 已生成并完成首轮 radar 搜证`);
+    } catch (err) {
+      toast('探针生成失败: ' + err.message);
+      btn.disabled = false;
+      btn.textContent = '一键生成 pack 并跑首轮搜证';
+    }
+  };
 }
 
 async function loadRadarPackDetail(slug) {
+  ui.radarModal.probeMode = false;
   ui.radarModal.pack = slug;
   if (!slug) {
-    $('radarSummaryBar').innerHTML = '当前卡片尚未绑定任何 radar 行业分析包，可从右上角下拉框选择绑定。';
-    $('radarBody').innerHTML = '';
+    const node = store.doc.nodes.find(x => x.id === ui.radarModal.nodeId);
+    if (node) renderProbeComposer(node);
     return;
   }
-  $('radarSummaryBar').textContent = `正在读取 ${slug} 的覆盖度矩阵与来源账本…`;
+  $('radarSummaryBar').textContent = `正在读取 ${slug} 的覆盖度矩阵、商业主张与来源账本…`;
   try {
     const res = await fetch('/api/radar/runs/' + encodeURIComponent(slug));
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -1151,6 +1269,7 @@ async function loadRadarPackDetail(slug) {
 }
 
 function renderRadarModalContent() {
+  if (ui.radarModal.probeMode) return;
   const detail = ui.radarModal.detail;
   if (!detail) return;
   const cov = detail.coverage;
@@ -1161,13 +1280,15 @@ function renderRadarModalContent() {
   }
 
   const sum = cov.summary || {};
+  const clSum = (detail.claims && detail.claims.summary) || { total: 0, high: 0, contested: 0 };
   $('radarModalSub').textContent = `${(detail.packSpec && detail.packSpec.title) || detail.pack} · 最近审计 ${detail.state && detail.state.created_at ? detail.state.created_at.slice(0, 19).replace('T', ' ') : '已就绪'}`;
   $('radarSummaryBar').innerHTML = `
     <span class="lvl-badge lvl-strong">STRONG ${sum.strong || 0}</span>
     <span class="lvl-badge lvl-evidence">EVIDENCE ${sum.evidence || 0}</span>
     <span class="lvl-badge lvl-mention">MENTION ${sum.mention || 0}</span>
     <span class="lvl-badge lvl-none">NONE ${sum.none || 0}</span>
-    <span style="margin-left:auto;color:var(--color-text-secondary);">独立核验来源 <b>${cov.sources || 0}</b> 条</span>
+    <span class="lvl-badge" style="background:var(--color-background-card);color:var(--color-text-primary);border:1px solid var(--color-border);">主张 ${clSum.total} (高信 ${clSum.high}${clSum.contested ? ` · 矛盾 ${clSum.contested}` : ''})</span>
+    <span style="margin-left:auto;color:var(--color-text-secondary);">核验来源 <b>${cov.sources || 0}</b> 条</span>
   `;
 
   document.querySelectorAll('[data-rtab]').forEach(t => {
@@ -1175,8 +1296,9 @@ function renderRadarModalContent() {
   });
 
   const body = $('radarBody');
+  const units = [...(cov.modules || []), ...(cov.subsystems || [])];
+
   if (ui.radarModal.tab === 'matrix') {
-    const units = [...(cov.modules || []), ...(cov.subsystems || [])];
     body.innerHTML = `<div class="matrix-grid">${units.map(u => {
       const lvlCls = 'lvl-' + (u.level || 'none');
       return `<div class="matrix-cell">
@@ -1194,9 +1316,116 @@ function renderRadarModalContent() {
         </div>
       </div>`;
     }).join('')}</div>`;
+  } else if (ui.radarModal.tab === 'claims') {
+    const claims = (detail.claims && detail.claims.claims) || [];
+    const sources = detail.sources || [];
+    const claimsHtml = claims.length ? claims.map(c => {
+      const confCls = 'conf-' + (c.label || 'low');
+      const catText = CLAIM_CAT_LABEL[c.category] || '商业主张';
+      const reasons = (c.reasons || []).map(r => REASON_LABEL[r] || r);
+      const nextAct = !reasons.length ? '可进入执行与报价底稿'
+        : reasons.includes('存在矛盾主张 (contested)') ? '复核矛盾来源'
+        : (c.reasons || []).includes('proprietary_reference') ? '换可复用来源或人工复核许可'
+        : (c.reasons || []).includes('single_source') ? '补充第 2 个独立域名来源'
+        : '补强原文核验来源';
+      return `<div class="claim-card ${c.status === 'contested' ? 'contested' : ''}">
+        <div class="claim-head">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font:600 11px var(--font-mono);color:var(--color-text-muted);">${esc(c.id)}</span>
+            <span class="spec-pill">${esc(catText)}</span>
+            ${c.metric ? `<span class="spec-pill" style="color:var(--color-text-primary);">${esc(c.metric)}</span>` : ''}
+          </div>
+          <span class="conf-pill ${confCls}">置信度 ${Number(c.confidence || 0).toFixed(2)} · ${esc(c.label || 'low')} · ${esc(c.status || 'open')}</span>
+        </div>
+        <div style="font-size:13px;line-height:1.55;margin-bottom:7px;">${esc(c.statement)}</div>
+        <div style="font-size:11px;color:var(--color-text-secondary);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+          <span>覆盖：<b>${esc((c.covers || []).join(', '))}</b> · 引用：<b>${esc((c.sources || []).join(', '))}</b>（${c.distinct_hosts || 0} 独立域）</span>
+          <span style="color:var(--color-edge-active);">下一步：${esc(nextAct)}</span>
+        </div>
+        ${reasons.length ? `<div style="font-size:10.5px;color:var(--color-text-muted);margin-top:4px;">扣分/限顶原因：${esc(reasons.join(' / '))}</div>` : ''}
+      </div>`;
+    }).join('') : '<div style="color:var(--color-text-muted);font-size:12.5px;margin-bottom:10px;">该分析包尚无商业主张记录，请在下方添加一条关于客单价、获客成本或合规红线的判断，由 radar 规则引擎自动算出置信度。</div>';
+
+    body.innerHTML = `
+      ${claimsHtml}
+      <div class="inline-panel">
+        <div style="font-size:12.5px;font-weight:700;margin-bottom:8px;">➕ 新增商业主张并立即用 radar claims 审计置信度</div>
+        <div class="form-row">
+          <select class="form-select" id="newClaimCat">
+            <option value="pricing">客单 / 毛利定价</option>
+            <option value="cac">获客成本 / 渠道</option>
+            <option value="demand">真实需求验证</option>
+            <option value="delivery">履约交付效率</option>
+            <option value="compliance">合规与许可红线</option>
+          </select>
+          <input class="form-input" id="newClaimMetric" maxlength="40" placeholder="关键指标（例：¥198–398/单）">
+        </div>
+        <textarea class="form-textarea" id="newClaimStmt" rows="2" placeholder="写一句可证伪的商业主张（如：三甲医院陪诊按次计价可行，且存在明确非诊疗合规红线）…"></textarea>
+        <div style="font-size:11px;color:var(--color-text-muted);">选择覆盖模块（至少 1 项）：</div>
+        <div class="chip-picker" id="claimCoverPicker">
+          ${units.map((u, i) => `<button type="button" class="pick-chip ${i === 0 ? 'on' : ''}" data-cid="${esc(u.id)}">${esc(u.id)} ${esc(u.name)}</button>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--color-text-muted);">勾选支撑来源（选 ≥2 个不同域名来源才可能达 high）：</div>
+        <div class="chip-picker" id="claimSrcPicker">
+          ${sources.slice(0, 18).map((s, i) => `<button type="button" class="pick-chip ${i === 0 ? 'on' : ''}" data-sid="${esc(s.id)}" title="${esc(s.title || s.url)}">${esc(s.id)}</button>`).join('')}
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button class="pill-btn primary" id="submitClaimBtn">写入并运行 radar claims 审计</button>
+        </div>
+      </div>
+    `;
+
+    body.querySelectorAll('#claimCoverPicker .pick-chip, #claimSrcPicker .pick-chip').forEach(ch => {
+      ch.onclick = () => ch.classList.toggle('on');
+    });
+
+    $('submitClaimBtn').onclick = async () => {
+      const statement = $('newClaimStmt').value.trim();
+      const covers = Array.from(body.querySelectorAll('#claimCoverPicker .pick-chip.on')).map(el => el.dataset.cid);
+      const srcs = Array.from(body.querySelectorAll('#claimSrcPicker .pick-chip.on')).map(el => el.dataset.sid);
+      if (!statement) { toast('请填写商业主张内容'); return; }
+      if (!covers.length || !srcs.length) { toast('请至少选择 1 个覆盖模块和 1 条支撑来源'); return; }
+      const btn = $('submitClaimBtn');
+      btn.disabled = true;
+      btn.textContent = '规则引擎计算中…';
+      try {
+        const res = await fetch('/api/radar/claims', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pack: detail.pack,
+            addClaim: {
+              category: $('newClaimCat').value,
+              metric: $('newClaimMetric').value.trim(),
+              statement,
+              covers,
+              sources: srcs,
+            },
+          }),
+        });
+        const evalData = await res.json();
+        if (!res.ok) throw new Error(evalData.error || ('HTTP ' + res.status));
+        ui.radarModal.detail.claims = evalData;
+        renderRadarModalContent();
+        await refreshRadarPacks();
+        toast('已通过 radar claims 规则引擎完成置信度审计');
+      } catch (err) {
+        toast('商业主张审计失败: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = '写入并运行 radar claims 审计';
+      }
+    };
   } else if (ui.radarModal.tab === 'sources') {
     const list = detail.sources || [];
-    body.innerHTML = list.map(s => `
+    body.innerHTML = `
+      <div class="inline-panel" style="margin-top:0;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px;">➕ 贴入新 URL 自动抓证（调用 radar draft + 原文核验）</div>
+        <div style="display:flex;gap:8px;">
+          <input class="form-input" id="draftUrlInput" style="margin:0;flex:1;" placeholder="粘贴 GitHub 仓库或公开文档/报价页 https://…">
+          <button class="pill-btn primary" id="draftUrlBtn">抓证并重算</button>
+        </div>
+      </div>
+    ` + (list.map(s => `
       <div class="source-card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
           <div>
@@ -1212,11 +1441,41 @@ function renderRadarModalContent() {
         </div>
         ${s.limitations ? `<div style="font-size:11px;color:var(--color-text-muted);margin-top:4px;">边界限制：${esc(Array.isArray(s.limitations) ? s.limitations.join('; ') : s.limitations)}</div>` : ''}
       </div>
-    `).join('') || '<div style="color:var(--color-text-muted);">暂无来源条目</div>';
+    `).join('') || '<div style="color:var(--color-text-muted);">暂无来源条目</div>');
+
+    $('draftUrlBtn').onclick = async () => {
+      const u = $('draftUrlInput').value.trim();
+      if (!/^https?:\/\//.test(u)) { toast('请输入以 http:// 或 https:// 开头的有效 URL'); return; }
+      const btn = $('draftUrlBtn');
+      btn.disabled = true;
+      btn.textContent = '抓取核验中…';
+      try {
+        const res = await fetch('/api/radar/draft-urls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pack: detail.pack, urls: [u] }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        ui.radarModal.detail = data.detail;
+        renderRadarModalContent();
+        await refreshRadarPacks();
+        toast(`已抓取 ${data.added} 条新来源并重算覆盖度`);
+      } catch (err) {
+        toast('抓证失败: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = '抓证并重算';
+      }
+    };
   } else {
     body.innerHTML = `<pre style="margin:0;white-space:pre-wrap;font:12px/1.65 var(--font-mono);color:var(--color-text-secondary);user-select:text;">${esc(detail.gapsMarkdown || '当前无空白模块缺口记录。')}</pre>`;
   }
 }
+
+$('radarProbeModeBtn').onclick = () => {
+  const node = store.doc.nodes.find(x => x.id === ui.radarModal.nodeId);
+  if (node) renderProbeComposer(node);
+};
 
 $('radarPackSelect').onchange = async (e) => {
   const slug = e.target.value;
@@ -1232,7 +1491,7 @@ $('radarPackSelect').onchange = async (e) => {
 
 $('radarRunBtn').onclick = async () => {
   const slug = ui.radarModal.pack;
-  if (!slug) { toast('请先选择要运行的 radar pack'); return; }
+  if (!slug) { toast('请先选择要运行的 radar pack，或点击新建探针'); return; }
   const btn = $('radarRunBtn');
   btn.disabled = true;
   btn.textContent = '审计运行中…';
@@ -1245,9 +1504,10 @@ $('radarRunBtn').onclick = async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
     ui.radarModal.detail = data;
+    ui.radarModal.probeMode = false;
     renderRadarModalContent();
     await refreshRadarPacks();
-    toast(`已完成 ${slug} 的 radar 覆盖度重算`);
+    toast(`已完成 ${slug} 的 radar 覆盖度与主张重算`);
   } catch (err) {
     toast('运行失败: ' + err.message);
   } finally {
@@ -1260,6 +1520,7 @@ $('radarCloseBtn').onclick = () => radarModal.classList.remove('open');
 radarModal.addEventListener('click', e => { if (e.target === radarModal) radarModal.classList.remove('open'); });
 document.querySelectorAll('[data-rtab]').forEach(btn => {
   btn.onclick = () => {
+    ui.radarModal.probeMode = false;
     ui.radarModal.tab = btn.dataset.rtab;
     renderRadarModalContent();
   };

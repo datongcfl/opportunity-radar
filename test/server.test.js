@@ -365,6 +365,70 @@ test('desk persistence and radar bridge execute cleanly in isolated temp dir', a
       assert.equal(runDetail.pack, 'mini-test');
       assert.equal(runDetail.coverage.sources, 1);
       assert.equal(runDetail.coverage.modules[0].id, 'M01');
+
+      // 3. Commercial claims submission & rule-based confidence evaluation
+      const claimRes = await fetch(`${srv.baseUrl}/api/radar/claims`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pack: 'mini-test',
+          addClaim: {
+            category: 'pricing',
+            metric: '¥99/月',
+            statement: '小程序预约模式具备基础工程可行性。',
+            covers: ['M01'],
+            sources: ['MT-001'],
+          },
+        }),
+      });
+      assert.equal(claimRes.status, 200);
+      const claimEval = await claimRes.json();
+      assert.equal(claimEval.summary.total, 1);
+      assert.ok(claimEval.claims[0].reasons.includes('single_source'));
+
+      // Invalid claim (unknown module ID) rejects with 400 and rolls back cleanly
+      const badClaim = await fetch(`${srv.baseUrl}/api/radar/claims`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pack: 'mini-test',
+          addClaim: {
+            category: 'pricing',
+            statement: '非法模块测试',
+            covers: ['M99'],
+            sources: ['MT-001'],
+          },
+        }),
+      });
+      assert.equal(badClaim.status, 400);
+      const afterBad = await (await fetch(`${srv.baseUrl}/api/radar/claims/mini-test`)).json();
+      assert.equal(afterBad.summary.total, 1);
+
+      // 4. One-click canvas-to-radar probe (offline baseline: honest 0-evidence none)
+      const probeRes = await fetch(`${srv.baseUrl}/api/radar/probe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: 'rpa-demo',
+          title: 'RPA 自动化代搭建',
+          originNode: { id: 'o_rpa', title: 'RPA 自动化代搭建', cat: 'AI与数据', summary: '帮中小电商自动核对发票与同步订单' },
+          branchNodes: [
+            { id: 'b1', type: 'monetize', title: '跨境店铺自动改价托管', summary: '按月收托管费', earn: '¥2,000/月', status: 'starred' },
+            { id: 'b2', type: 'scenario', title: '多平台订单对账场景', summary: '财务每日手工导表痛点', status: 'exploring' },
+            { id: 'b3', type: 'monetize', title: '低价卖通用脚本', status: 'falsified' },
+          ],
+          runGithub: false,
+        }),
+      });
+      assert.equal(probeRes.status, 201);
+      const probeData = await probeRes.json();
+      assert.equal(probeData.pack, 'rpa-demo');
+      // Falsified branch excluded from generated pack modules
+      assert.equal(probeData.detail.packSpec.modules.length, 1);
+      assert.equal(probeData.detail.packSpec.modules[0].name, '跨境店铺自动改价托管');
+      assert.equal(probeData.detail.packSpec.subsystems.length, 1);
+      // Placeholder is unreachable -> honest none level (never fakes evidence!)
+      assert.equal(probeData.detail.coverage.summary.none, 2);
     }
   } finally {
     await srv.close();

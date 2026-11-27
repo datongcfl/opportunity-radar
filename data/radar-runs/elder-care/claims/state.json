@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "run": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\opportunity-radar\\data\\radar-runs\\elder-care",
+  "pack": "elder-care",
+  "created_at": "2026-11-26T23:52:38-08:00",
+  "radar_version": "1.7.0",
+  "claims_sha256": "e2acc9b9cc93cc25133bae3952ca31339788a3f1cc5de2a5c3ddedd471b4bec8",
+  "count": 4
+}

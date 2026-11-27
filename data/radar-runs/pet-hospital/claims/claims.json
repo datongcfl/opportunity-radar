@@ -1,0 +1,90 @@
+{
+  "meta": {
+    "schema_version": 1,
+    "run": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\radar\\runs\\pet-hospital-demo",
+    "pack": "pet-hospital",
+    "created_at": "2026-11-26T23:52:39-08:00",
+    "radar_version": "1.7.0",
+    "claims_sha256": "e7124b934db900699485f3fb99b69f2d37fa1788d452112433e54a0c24ae8178",
+    "count": 3
+  },
+  "claims": [
+    {
+      "id": "C001",
+      "category": "pricing",
+      "metric": "SaaS $89/月起 + 分项估价直结账",
+      "statement": "成熟宠物诊所工作流普遍采用“治疗估价单 → 宠主确认 → 自动入账/保险直付”闭环，成长型多医生诊所云 SaaS 订阅价位在 $89/月量级。",
+      "covers": [
+        "M04"
+      ],
+      "sources": [
+        "PH-002",
+        "PH-013",
+        "PH-017"
+      ],
+      "contradicts": [],
+      "declared_contradicts": [],
+      "confidence": 0.4,
+      "label": "low",
+      "status": "open",
+      "reasons": [
+        "proprietary_reference"
+      ],
+      "source_count": 3,
+      "verified_count": 3,
+      "distinct_hosts": 3,
+      "best_level": "strong"
+    },
+    {
+      "id": "C002",
+      "category": "delivery",
+      "metric": "SOAP 语音病历 + 复诊随访自动派发",
+      "statement": "诊室 AI 语音转 SOAP 病历与出院后自动生成复诊回访任务可显著减少医生文书耗时并提高疫苗与慢病复购。",
+      "covers": [
+        "M02",
+        "M06"
+      ],
+      "sources": [
+        "PH-006",
+        "PH-015"
+      ],
+      "contradicts": [],
+      "declared_contradicts": [],
+      "confidence": 0.4,
+      "label": "low",
+      "status": "open",
+      "reasons": [
+        "proprietary_reference"
+      ],
+      "source_count": 2,
+      "verified_count": 2,
+      "distinct_hosts": 2,
+      "best_level": "strong"
+    },
+    {
+      "id": "C003",
+      "category": "compliance",
+      "metric": "AGPL-3.0 传染性 + 专有 SaaS 限制",
+      "statement": "直接基于 OpenVPM 改造商业托管服务需注意 AGPL-3.0 强传染性许可边界，商业 PIMS 仅可借鉴流程模型不可抄袭源码。",
+      "covers": [
+        "M01",
+        "M05"
+      ],
+      "sources": [
+        "PH-001",
+        "PH-002",
+        "PH-003"
+      ],
+      "contradicts": [],
+      "declared_contradicts": [],
+      "confidence": 0.8,
+      "label": "high",
+      "status": "accepted",
+      "reasons": [],
+      "source_count": 3,
+      "verified_count": 3,
+      "distinct_hosts": 2,
+      "best_level": "strong"
+    }
+  ]
+}
