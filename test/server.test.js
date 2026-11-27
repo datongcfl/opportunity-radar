@@ -186,13 +186,27 @@ test('security and malformed input guards return 4xx without crashing server', a
     const rebindHost = await sendRawHttp('GET /api/industries HTTP/1.1\r\nHost: evil.example:7100\r\nConnection: close\r\n\r\n');
     assert.equal(rebindHost, 403);
 
-    // Cross-origin Origin, cross-site Sec-Fetch-Site, and text/plain CSRF writes must be blocked
+    // Cross-origin Origin, cross-port loopback Origin, cross-site Sec-Fetch-Site, and text/plain CSRF must be blocked
     const badOrigin = await fetch(`${srv.baseUrl}/api/desk`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Origin: 'https://evil.example' },
       body: JSON.stringify({ nodes: [], edges: [] }),
     });
     assert.equal(badOrigin.status, 403);
+
+    const crossPortOrigin = await fetch(`${srv.baseUrl}/api/desk`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Origin: 'http://localhost:9999' },
+      body: JSON.stringify({ nodes: [], edges: [] }),
+    });
+    assert.equal(crossPortOrigin.status, 403);
+
+    const sameOriginOk = await fetch(`${srv.baseUrl}/api/desk`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Origin: srv.baseUrl },
+      body: JSON.stringify({ nodes: [], edges: [] }),
+    });
+    assert.equal(sameOriginOk.status, 200);
 
     const crossSite = await fetch(`${srv.baseUrl}/api/desk`, {
       method: 'PUT',

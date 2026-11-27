@@ -152,12 +152,32 @@ function isLoopbackHost(rawHost) {
 }
 
 /**
- * Enforce local-only Host/Origin/Sec-Fetch-Site and JSON Content-Type guards against CSRF & DNS rebinding.
+ * Normalize a host[:port] authority with explicit port for strict same-origin comparison.
+ * @param {string} rawHost
+ * @param {string} [defaultPort='80']
+ * @returns {string}
+ */
+function normalizeHostPort(rawHost, defaultPort = '80') {
+  const s = String(rawHost || '').trim().toLowerCase();
+  if (!s) return '';
+  if (s.startsWith('[')) {
+    const end = s.indexOf(']');
+    if (end < 0) return s;
+    const hostPart = s.slice(0, end + 1);
+    const rest = s.slice(end + 1);
+    return rest ? `${hostPart}${rest}` : `${hostPart}:${defaultPort}`;
+  }
+  const idx = s.lastIndexOf(':');
+  return (idx >= 0 && /^\d{1,5}$/.test(s.slice(idx + 1))) ? s : `${s}:${defaultPort}`;
+}
+
+/**
+ * Enforce local-only Host, strict same-origin (host + port) Origin, Sec-Fetch-Site, and JSON Content-Type guards.
  * @param {import('http').IncomingMessage} req
  * @param {{ allowPublic?: boolean }} [options]
  */
 function guardLocalRequest(req, { allowPublic = false } = {}) {
-  const hostHeader = typeof req.headers.host === 'string' ? req.headers.host : '';
+  const hostHeader = typeof req.headers.host === 'string' ? req.headers.host.trim() : '';
   if (!allowPublic && hostHeader && !isLoopbackHost(hostHeader)) {
     throw new HttpError(403, '拒绝非本地 Host 访问（防 DNS rebinding）');
   }
@@ -172,6 +192,14 @@ function guardLocalRequest(req, { allowPublic = false } = {}) {
     }
     if (!['http:', 'https:'].includes(parsedOrigin.protocol) || !isLoopbackHost(parsedOrigin.host)) {
       throw new HttpError(403, '拒绝跨源 Origin 请求');
+    }
+    if (hostHeader) {
+      const originDefaultPort = parsedOrigin.protocol === 'https:' ? '443' : '80';
+      const originAuthority = normalizeHostPort(parsedOrigin.host, originDefaultPort);
+      const reqAuthority = normalizeHostPort(hostHeader, originDefaultPort);
+      if (originAuthority !== reqAuthority) {
+        throw new HttpError(403, '拒绝跨端口或跨主机 Origin 请求');
+      }
     }
   }
 
