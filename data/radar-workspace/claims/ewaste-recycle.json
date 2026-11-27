@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "pack": "ewaste-recycle",
+  "claims": [
+    {
+      "id": "C001",
+      "category": "delivery",
+      "metric": "开源零授权费擦除引擎 (nwipe + ShredOS)",
+      "statement": "中小企业退役 PC/笔记本的合规硬盘数据擦除与 PDF 销毁证明，可直接基于开源 ShredOS/nwipe 跑通，软件采购成本接近于零。",
+      "covers": ["M02", "S01"],
+      "sources": ["EW-001", "EW-002", "EW-010"],
+      "contradicts": []
+    },
+    {
+      "id": "C002",
+      "category": "delivery",
+      "metric": "SMART + iOS 诊断自动化（不覆盖物理暗病）",
+      "statement": "openSeaChest 与 libimobiledevice 可自动化读取硬盘健康度与 iOS 电池/硬件参数，但无法检测拆修、进水或主板暗病，高值单机仍需人工验机复核。",
+      "covers": ["M01", "S02"],
+      "sources": ["EW-003", "EW-005", "EW-011"],
+      "contradicts": []
+    },
+    {
+      "id": "C003",
+      "category": "compliance",
+      "metric": "危废环保资质 + 防销赃实名登记红线",
+      "statement": "废旧电子设备物理拆解涉及重金属危废与 R2/国内处理资格许可硬红线，个人和小团队只能做合规二手流通与服务，严禁无证拆解与收来路不明机器。",
+      "covers": ["M05", "S04"],
+      "sources": ["EW-008", "EW-012"],
+      "contradicts": []
+    },
+    {
+      "id": "C004",
+      "category": "pricing",
+      "metric": "C端标准机低毛利 vs 轻资产代卖/服务费",
+      "statement": "重库存自营回收高度受跌价与履约费用挤压，轻资产质检撮合/寄卖模式更抗波动，但本土区域真实佣金率与转化率仍缺第二独立公开源，需线下抽样实测。",
+      "covers": ["M04", "M06"],
+      "sources": ["EW-011", "EW-013"],
+      "contradicts": []
+    },
+    {
+      "id": "C005",
+      "category": "demand",
+      "metric": "企业批量台账追踪（单源待印证）",
+      "statement": "开源 Snipe-IT 可直接作为多客户回收商资产流转台账底座，但尚缺第二独立开源/商业 ITAD 系统的多租户估价对账实证。",
+      "covers": ["M03"],
+      "sources": ["EW-004"],
+      "contradicts": []
+    }
+  ]
+}

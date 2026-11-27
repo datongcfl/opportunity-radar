@@ -1,0 +1,208 @@
+{
+  "modules": [
+    {
+      "id": "M01",
+      "name": "收货估价与成色质检",
+      "kind": "module",
+      "level": "strong",
+      "source_count": 4,
+      "evidence_count": 3,
+      "independent_count": 2,
+      "verified_count": 3,
+      "verified_independent_count": 2,
+      "sources": [
+        "EW-003",
+        "EW-005",
+        "EW-011",
+        "EW-013"
+      ],
+      "strongest": "EW-005",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "M02",
+      "name": "合规数据擦除与销毁证明",
+      "kind": "module",
+      "level": "strong",
+      "source_count": 5,
+      "evidence_count": 4,
+      "independent_count": 2,
+      "verified_count": 4,
+      "verified_independent_count": 2,
+      "sources": [
+        "EW-001",
+        "EW-002",
+        "EW-003",
+        "EW-010",
+        "EW-012"
+      ],
+      "strongest": "EW-003",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "M03",
+      "name": "资产台账与批次追踪",
+      "kind": "module",
+      "level": "evidence",
+      "source_count": 1,
+      "evidence_count": 1,
+      "independent_count": 1,
+      "verified_count": 1,
+      "verified_independent_count": 1,
+      "sources": [
+        "EW-004"
+      ],
+      "strongest": "EW-004",
+      "reusable": false,
+      "single_source": true
+    },
+    {
+      "id": "M04",
+      "name": "定价毛利与周转风控",
+      "kind": "module",
+      "level": "evidence",
+      "source_count": 2,
+      "evidence_count": 1,
+      "independent_count": 1,
+      "verified_count": 1,
+      "verified_independent_count": 1,
+      "sources": [
+        "EW-011",
+        "EW-013"
+      ],
+      "strongest": "EW-011",
+      "reusable": false,
+      "single_source": true
+    },
+    {
+      "id": "M05",
+      "name": "防销赃实名与环保合规红线",
+      "kind": "module",
+      "level": "evidence",
+      "source_count": 3,
+      "evidence_count": 2,
+      "independent_count": 1,
+      "verified_count": 2,
+      "verified_independent_count": 1,
+      "sources": [
+        "EW-008",
+        "EW-010",
+        "EW-012"
+      ],
+      "strongest": "EW-010",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "M06",
+      "name": "翻新整备与多渠道出货",
+      "kind": "module",
+      "level": "evidence",
+      "source_count": 2,
+      "evidence_count": 1,
+      "independent_count": 1,
+      "verified_count": 1,
+      "verified_independent_count": 1,
+      "sources": [
+        "EW-011",
+        "EW-013"
+      ],
+      "strongest": "EW-011",
+      "reusable": false,
+      "single_source": true
+    }
+  ],
+  "subsystems": [
+    {
+      "id": "S01",
+      "name": "企业批量电脑处置 (ITAD)",
+      "kind": "subsystem",
+      "level": "strong",
+      "source_count": 5,
+      "evidence_count": 4,
+      "independent_count": 2,
+      "verified_count": 4,
+      "verified_independent_count": 2,
+      "sources": [
+        "EW-001",
+        "EW-002",
+        "EW-004",
+        "EW-010",
+        "EW-012"
+      ],
+      "strongest": "EW-004",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "S02",
+      "name": "C端标准手机回收与翻新",
+      "kind": "subsystem",
+      "level": "strong",
+      "source_count": 3,
+      "evidence_count": 2,
+      "independent_count": 2,
+      "verified_count": 2,
+      "verified_independent_count": 2,
+      "sources": [
+        "EW-005",
+        "EW-011",
+        "EW-013"
+      ],
+      "strongest": "EW-005",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "S03",
+      "name": "底层硬盘与移动设备诊断工具链",
+      "kind": "subsystem",
+      "level": "evidence",
+      "source_count": 4,
+      "evidence_count": 4,
+      "independent_count": 1,
+      "verified_count": 4,
+      "verified_independent_count": 1,
+      "sources": [
+        "EW-001",
+        "EW-002",
+        "EW-003",
+        "EW-005"
+      ],
+      "strongest": "EW-005",
+      "reusable": false,
+      "single_source": false
+    },
+    {
+      "id": "S04",
+      "name": "报废电子垃圾合规拆解",
+      "kind": "subsystem",
+      "level": "evidence",
+      "source_count": 2,
+      "evidence_count": 1,
+      "independent_count": 1,
+      "verified_count": 1,
+      "verified_independent_count": 1,
+      "sources": [
+        "EW-008",
+        "EW-012"
+      ],
+      "strongest": "EW-008",
+      "reusable": false,
+      "single_source": true
+    }
+  ],
+  "summary": {
+    "none": 0,
+    "mention": 0,
+    "evidence": 6,
+    "strong": 4
+  },
+  "sources": 10,
+  "platforms": {
+    "github": 5,
+    "web": 5
+  }
+}

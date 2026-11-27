@@ -1,0 +1,6 @@
+id,statement,confidence,label,status,sources,reasons,next_action
+C001,中小企业退役 PC/笔记本的合规硬盘数据擦除与 PDF 销毁证明，可直接基于开源 ShredOS/nwipe 跑通，软件采购成本接近于零。,0.8,high,accepted,EW-001;EW-002;EW-010,,可进入需求底稿
+C002,openSeaChest 与 libimobiledevice 可自动化读取硬盘健康度与 iOS 电池/硬件参数，但无法检测拆修、进水或主板暗病，高值单机仍需人工验机复核。,0.8,high,accepted,EW-003;EW-005;EW-011,,可进入需求底稿
+C003,废旧电子设备物理拆解涉及重金属危废与 R2/国内处理资格许可硬红线，个人和小团队只能做合规二手流通与服务，严禁无证拆解与收来路不明机器。,0.4,low,open,EW-008;EW-012,proprietary_reference,换可复用来源或人工复核许可
+C004,重库存自营回收高度受跌价与履约费用挤压，轻资产质检撮合/寄卖模式更抗波动，但本土区域真实佣金率与转化率仍缺第二独立公开源，需线下抽样实测。,0.6,medium,accepted,EW-011;EW-013,,可进入需求底稿
+C005,开源 Snipe-IT 可直接作为多客户回收商资产流转台账底座，但尚缺第二独立开源/商业 ITAD 系统的多租户估价对账实证。,0.55,medium,open,EW-004,single_source,找第二个独立来源

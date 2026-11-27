@@ -1,0 +1,332 @@
+{
+  "schema_version": 1,
+  "pack": "ewaste-recycle",
+  "sources": [
+    {
+      "id": "EW-001",
+      "platform": "github",
+      "url": "https://github.com/martijnvanbrummelen/nwipe",
+      "title": "martijnvanbrummelen/nwipe",
+      "artifact_type": "code",
+      "language": "en",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "GPL-2.0",
+      "license_status": "needs_review",
+      "evidence_level": "code_tests",
+      "derived_from_real_data": false,
+      "covers": [
+        "M02",
+        "S01",
+        "S03"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        "It was created to run the DBAN erase engine on any Linux distribution, with better and more modern hardware support.",
+        "> Both `hdparm` and `smartmontools` are **mandatory** if you want all nwipe features to be fully available.",
+        "> If they are not installed **at runtime**, nwipe will log a warning and continue, but many important features will not work as intended."
+      ],
+      "quote_verified": "unknown",
+      "limitations": "GPL-2.0 许可；仅负责硬盘级擦除与报告生成，不含估价、财务与手机端逻辑。",
+      "status": "selected",
+      "why_selected": "开源 Linux 磁盘数据擦除核心引擎（支持 DoD/NIST 方法并输出 PDF 擦除审计证书）",
+      "stars": 1251
+    },
+    {
+      "id": "EW-002",
+      "platform": "github",
+      "url": "https://github.com/PartialVolume/shredos.x86_64",
+      "title": "PartialVolume/shredos.x86_64",
+      "artifact_type": "code",
+      "language": "en",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "unknown",
+      "license_status": "needs_review",
+      "evidence_level": "real_artifact",
+      "derived_from_real_data": false,
+      "covers": [
+        "M02",
+        "S01",
+        "S03"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        ">\n> These are the **only** official homes of ShredOS.",
+        "> [!WARNING]\n> ShredOS is built to irreversibly erase data.",
+        "Double-check every selected drive before starting a wipe, especially on systems with multiple internal, external, or USB-attached disks."
+      ],
+      "quote_verified": "unknown",
+      "limitations": "专注 x86_64 PC/服务器硬盘离线擦除，不适用于 iOS/Android 移动设备。",
+      "status": "selected",
+      "why_selected": "ShredOS 轻量级 U 盘启动系统（插上企业退役电脑开机直进 nwipe 批量清零硬盘）",
+      "stars": 3294
+    },
+    {
+      "id": "EW-003",
+      "platform": "github",
+      "url": "https://github.com/Seagate/openSeaChest",
+      "title": "Seagate/openSeaChest",
+      "artifact_type": "code",
+      "language": "en",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "unknown",
+      "license_status": "needs_review",
+      "evidence_level": "code_tests",
+      "derived_from_real_data": false,
+      "covers": [
+        "M01",
+        "M02",
+        "S03"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        "# openSeaChest\n\n## Cross platform storage device utilities to manage, configure, and read health information for SATA, SAS, NVMe, and USB attached HDDs and SSDs.",
+        "openSeaChest is your storage device expert - a collection of **18 task-focused utilities** covering **200+ commands** so you don't need to be a low-level command expert.",
+        "openSeaChest provides a **task-focused, cross-platform approach** to storage device management."
+      ],
+      "quote_verified": "unknown",
+      "limitations": "MPL-2.0 许可；偏底层存储硬件诊断与安全擦除 CLI，需二次封装成收货质检流水线。",
+      "status": "selected",
+      "why_selected": "希捷开源跨厂商磁盘诊断与底层安全擦除工具集（支持 SMART 体检、SATA/NVMe/SAS 底层指令）",
+      "stars": 923
+    },
+    {
+      "id": "EW-004",
+      "platform": "github",
+      "url": "https://github.com/grokability/snipe-it",
+      "title": "grokability/snipe-it",
+      "artifact_type": "code",
+      "language": "en",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "AGPL-3.0",
+      "license_status": "needs_review",
+      "evidence_level": "code_tests",
+      "derived_from_real_data": false,
+      "covers": [
+        "M03",
+        "S01"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        "Knowing who has which laptop, when it was purchased in\norder to depreciate it correctly, handling software licenses, etc.",
+        "Snipe-IT is actively developed and we [release quite frequently](https://github.com/grokability/snipe-it/releases).",
+        "([Check out the live demo here](https://snipeitapp.com/demo/).)\n\n> [!TIP]\n> __This is web-based software__."
+      ],
+      "quote_verified": "unknown",
+      "limitations": "AGPL-3.0 强传染性开源许可；默认面向企业内部 IT 资产管理，做外部回收商需适配客户分租与计价。",
+      "status": "selected",
+      "why_selected": "成熟开源 IT 资产台账系统（序列号追踪、借还交接记录、审计日志与报废归档）",
+      "stars": 15269
+    },
+    {
+      "id": "EW-005",
+      "platform": "github",
+      "url": "https://github.com/libimobiledevice/libimobiledevice",
+      "title": "libimobiledevice/libimobiledevice",
+      "artifact_type": "code",
+      "language": "en",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "LGPL-2.1",
+      "license_status": "needs_review",
+      "evidence_level": "code_tests",
+      "derived_from_real_data": false,
+      "covers": [
+        "M01",
+        "S02",
+        "S03"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        "Unlike other projects, it does not depend on using any existing proprietary\nlibraries and does not require jailbreaking.",
+        "The library is in development since August 2007 with the goal to bring support\nfor these devices to the Linux Desktop.",
+        "Optionally,\n`mbedtls_LIBS` can be used to set the library names directly."
+      ],
+      "quote_verified": "unknown",
+      "limitations": "LGPL-2.1 许可；提供手机端基础硬件信息采集能力，但不覆盖拆修/进水/扩容等物理暗病检测。",
+      "status": "selected",
+      "why_selected": "跨平台开源 iOS 设备通信与诊断底层协议库（无需 iTunes 读取电池循环、设备信息与状态）",
+      "stars": 8386
+    },
+    {
+      "id": "EW-008",
+      "platform": "web",
+      "url": "https://en.wikipedia.org/wiki/Electronic_waste",
+      "title": "Electronic waste - Wikipedia",
+      "artifact_type": "article",
+      "language": "en",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "unknown",
+      "license_status": "needs_review",
+      "evidence_level": "docs",
+      "derived_from_real_data": false,
+      "covers": [
+        "M05",
+        "S04"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        "Please help improve it or discuss these issues on the talk page .",
+        "( Learn how and when to remove these messages ) This article may require copy editing for spelling, grammar, style, cohesion, or tone .",
+        "( March 2026 ) ( Learn how and when to remove this message ) This article may be too long to read and navigate comfortably ."
+      ],
+      "quote_verified": "unknown",
+      "limitations": "宏观环保百科综述，国内执行须直接对照《废弃电器电子产品回收处理管理条例》与危废名录。",
+      "status": "selected",
+      "why_selected": "全球电子废弃物环境毒性与监管规范综述（阐明铅/汞/镉等重金属危害与无证粗暴拆解污染边界）"
+    },
+    {
+      "id": "EW-010",
+      "platform": "web",
+      "url": "https://en.wikipedia.org/wiki/Data_erasure",
+      "title": "Data erasure - Wikipedia",
+      "artifact_type": "article",
+      "language": "zh",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "unknown",
+      "license_status": "needs_review",
+      "evidence_level": "docs",
+      "derived_from_real_data": false,
+      "covers": [
+        "M02",
+        "M05",
+        "S01"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        "Please help improve this article by adding citations to reliable sources .",
+        "Unsourced material may be challenged and removed .",
+        "By overwriting the data on the storage device, the data is rendered irrecoverable."
+      ],
+      "quote_verified": "unknown",
+      "limitations": "百科综述文献（CC BY-SA），用于交叉验证数据擦除行业规范，具体涉密要求须查当地法规。",
+      "status": "selected",
+      "why_selected": "数据擦除与 NIST SP 800-88 / DoD 介质清理标准综述（明确软件覆写、加密擦除与物理消磁的适用场景）"
+    },
+    {
+      "id": "EW-011",
+      "platform": "web",
+      "url": "https://en.wikipedia.org/wiki/Refurbishment_(electronics)",
+      "title": "Refurbishment (electronics) - Wikipedia",
+      "artifact_type": "article",
+      "language": "zh",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "unknown",
+      "license_status": "needs_review",
+      "evidence_level": "docs",
+      "derived_from_real_data": false,
+      "covers": [
+        "M01",
+        "M04",
+        "M06",
+        "S02"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        "Please help improve this article if you can.",
+        "Other refurbished electronics include smartwatches , games consoles , and cameras .",
+        "Usually, a refurbished electronic device is one that has been previously returned or re-sold to a retailer for any reason."
+      ],
+      "quote_verified": "unknown",
+      "limitations": "百科综述文献（CC BY-SA），不含具体品牌单机实时报价。",
+      "status": "selected",
+      "why_selected": "消费电子翻新与二级流通综述（拆解成色分级、翻新整备、质保溢价与零售毛利差异）"
+    },
+    {
+      "id": "EW-012",
+      "platform": "web",
+      "url": "https://sustainableelectronics.org/r2/",
+      "title": "R2 - SERI",
+      "artifact_type": "article",
+      "language": "en",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "proprietary",
+      "license_status": "proprietary",
+      "evidence_level": "docs",
+      "derived_from_real_data": false,
+      "covers": [
+        "M02",
+        "M05",
+        "S01",
+        "S04"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        "R2 IS SETTING THE STANDARD FOR USED ELECTRONICS, EVERY STEP OF THE WAY.",
+        "AS THE WORLD’S MOST WIDELY ADOPTED STANDARD FOR RESPONSIBLE PRACTICES FOR USED ELECTRONICS, R2 IS GUIDING THE WORLD THROUGH THESE DIFFICULT “WHAT, HOW, AND WHO” CHOICES.",
+        "A powerful tool that provides strong guidance through these complex decisions, R2 takes a decidedly different approach."
+      ],
+      "quote_verified": "unknown",
+      "limitations": "国际行业认证机构标准（非中国本土环保审批文件，国内拆解仍需《废弃电器电子产品处理资格证书》）。",
+      "status": "selected",
+      "why_selected": "SERI 官方 R2v3 电子产品合规回收与再使用认证标准（全球 ITAD 回收商准入与数据安全/环保审计核心背书）"
+    },
+    {
+      "id": "EW-013",
+      "platform": "web",
+      "url": "https://www.backmarket.com/en-us/about-us",
+      "title": "About us | Back Market",
+      "artifact_type": "article",
+      "language": "en",
+      "retrieved_at": "2026-11-27",
+      "http_status": 200,
+      "access_status": "public",
+      "license": "unknown",
+      "license_status": "needs_review",
+      "evidence_level": "production",
+      "derived_from_real_data": false,
+      "covers": [
+        "M01",
+        "M04",
+        "M06",
+        "S02"
+      ],
+      "borrow_scope": [
+        "workflow"
+      ],
+      "quotes": [
+        "The Back Market Promise End fast tech Tech Journal Back Market for business Need help?",
+        "Explore protection plans Repair DIY Tools, guides, and expert tips to keep your tech running longer.",
+        "Repair your tech Express Replacement Not happy with your device?"
+      ],
+      "quote_verified": "unknown",
+      "limitations": "商业平台专有官网，仅作轻资产平台抽佣模式对比参考，需人工复核商业口径。",
+      "status": "selected",
+      "why_selected": "Back Market 全球二手翻新电子交易平台模式（不自囤重库存、靠严控翻新商质检标准与抽佣撮合做高毛利平台模式）"
+    }
+  ]
+}

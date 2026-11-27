@@ -4,7 +4,7 @@ import { computeVisibleSet, tidyDeskLayout, computeSnap } from './layout.js';
 const store = new DeskStore();
 
 // Ensure clean initial non-overlapping coordinates on first load
-if (!localStorage.getItem('opp_radar_spatial_desk_v3')) {
+if (!localStorage.getItem('opp_radar_spatial_desk_v6')) {
   tidyDeskLayout(store.doc);
   store.saveQuiet();
 }

@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "pack": "ewaste-recycle",
+  "version": "0.1.0",
+  "title": "电脑与手机电子产品回收（含企业 ITAD）",
+  "aliases": ["二手手机回收", "二手电脑回收", "ITAD", "电子产品回收", "数据擦除"],
+  "modules": [
+    {
+      "id": "M01",
+      "name": "收货估价与成色质检",
+      "artifacts": ["验机报告", "分级报价单", "设备诊断日志"],
+      "keywords": ["diagnostic", "inspect", "grading", "valuation", "device", "质检", "估价"]
+    },
+    {
+      "id": "M02",
+      "name": "合规数据擦除与销毁证明",
+      "artifacts": ["NIST 800-88 擦除证书", "PDF 销毁报告", "硬盘清零日志"],
+      "keywords": ["erasure", "sanitization", "NIST", "800-88", "wipe", "nwipe", "certificate", "purge"]
+    },
+    {
+      "id": "M03",
+      "name": "资产台账与批次追踪",
+      "artifacts": ["序列号台账", "交接清单", "批次流向记录"],
+      "keywords": ["asset", "inventory", "serial", "tracking", "audit", "chain of custody", "snipe-it"]
+    },
+    {
+      "id": "M04",
+      "name": "定价毛利与周转风控",
+      "artifacts": ["毛利率核算表", "库存跌价风控线", "1P/3P 收益模型"],
+      "keywords": ["margin", "revenue", "remarketing", "resale", "refurbish", "inventory", "毛利"]
+    },
+    {
+      "id": "M05",
+      "name": "防销赃实名与环保合规红线",
+      "artifacts": ["实名登记单", "合法来源核验", "危废/R2 合规认证"],
+      "keywords": ["compliance", "regulation", "e-waste", "disposal", "hazardous", "recycling", "R2", "legal"]
+    },
+    {
+      "id": "M06",
+      "name": "翻新整备与多渠道出货",
+      "artifacts": ["翻新工单", "B2B 批发/B2C 寄卖单"],
+      "keywords": ["refurbishing", "recommerce", "remarketing", "resale", "wholesale", "retail"]
+    }
+  ],
+  "subsystems": [
+    {
+      "id": "S01",
+      "name": "企业批量电脑处置 (ITAD)",
+      "artifacts": ["企业清退合同", "批量擦除与证书包"],
+      "keywords": ["ITAD", "IT asset disposition", "enterprise", "decommissioning", "corporate"]
+    },
+    {
+      "id": "S02",
+      "name": "C端标准手机回收与翻新",
+      "artifacts": ["门店回收单", "C2B 质检流"],
+      "keywords": ["consumer", "mobile", "iOS", "smartphone", "trade-in", "recommerce"]
+    },
+    {
+      "id": "S03",
+      "name": "底层硬盘与移动设备诊断工具链",
+      "artifacts": ["启动盘擦除镜像", "CLI 诊断工具"],
+      "keywords": ["ShredOS", "nwipe", "SeaChest", "libimobiledevice", "SMART", "NVMe"]
+    },
+    {
+      "id": "S04",
+      "name": "报废电子垃圾合规拆解",
+      "artifacts": ["环保处理资质", "危废转移联单"],
+      "keywords": ["electronic waste", "dismantling", "hazardous", "EPA", "recycler"]
+    }
+  ],
+  "source_map": {
+    "github": ["nwipe disk erasure in:readme", "IT asset management snipe-it in:readme"],
+    "web": ["NIST SP 800-88 media sanitization", "IT asset disposition ITAD", "electronic waste recycling EPA"]
+  },
+  "query_templates": [
+    "{industry} {module} 标准 流程",
+    "{subsystem} 毛利 风险",
+    "{industry} {artifact} 合规"
+  ]
+}

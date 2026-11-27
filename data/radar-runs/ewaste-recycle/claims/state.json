@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "run": "C:\\Users\\Administrator\\.gemini\\antigravity\\scratch\\opportunity-radar\\data\\radar-runs\\ewaste-recycle",
+  "pack": "ewaste-recycle",
+  "created_at": "2026-11-27T00:23:23-08:00",
+  "radar_version": "1.7.0",
+  "claims_sha256": "06bf755c3ca9a7d2df722d14b90c60ebe25523bd16bfac7cf327b80555d468d4",
+  "count": 5
+}
